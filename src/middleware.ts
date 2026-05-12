@@ -27,6 +27,7 @@ const PROTECTED_API = [
   "/api/receipts",
 ];
 const PUBLIC_ROUTES = ["/login", "/signup", "/api/auth/login", "/api/auth/signup", "/api/auth/logout", "/api/seed"];
+const PUBLIC_PREFIXES = ["/f/", "/api/public/"];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const url = new URL(context.request.url);
@@ -41,6 +42,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // Rutas publicas siempre pasan
   if (PUBLIC_ROUTES.includes(path)) return next();
+  if (PUBLIC_PREFIXES.some((p) => path.startsWith(p))) return next();
 
   // Rutas protegidas: redirigir si no hay sesion
   const isProtected = PROTECTED_PREFIXES.some((p) => path.startsWith(p))

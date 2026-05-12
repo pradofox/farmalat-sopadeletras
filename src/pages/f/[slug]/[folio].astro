@@ -1,0 +1,184 @@
+---
+export const prerender = false;
+import "../../../styles/global.css";
+import { getDb, schema } from "../../../lib/db";
+import { and, eq } from "drizzle-orm";
+import { REGIMEN_FISCAL, USO_CFDI } from "../../../lib/sat-catalogs";
+
+const db = getDb();
+const slug = Astro.params.slug as string;
+const folio = Astro.params.folio as string;
+
+const [tenant] = await db.select().from(schema.tenants).where(eq(schema.tenants.slug, slug)).limit(1);
+if (!tenant) {
+  return new Response("Farmacia no encontrada", { status: 404 });
+}
+
+const [sale] = await db.select().from(schema.sales)
+  .where(and(eq(schema.sales.tenantId, tenant.id), eq(schema.sales.ticketNumber, folio)))
+  .limit(1);
+
+const fmt = (n: number) => "$" + Number(n).toLocaleString("es-MX", { minimumFractionDigits: 2 });
+const fmtDate = (d: Date | null) => d ? new Date(d).toLocaleDateString("es-MX", { dateStyle: "long" }) : "—";
+
+const ticketAge = sale?.createdAt ? Date.now() - new Date(sale.createdAt).getTime() : 0;
+const isExpired = ticketAge > 30 * 24 * 60 * 60 * 1000;
+const alreadyIssued = sale?.cfdiStatus === "issued";
+---
+
+<!doctype html>
+<html lang="es-MX">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10069F" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+    <title>Facturar ticket {folio} · {tenant.name}</title>
+  </head>
+  <body class="min-h-screen bg-neutral-50 text-neutral-900 antialiased">
+    <main class="mx-auto max-w-2xl px-4 py-8 md:px-6 md:py-12">
+      <header class="mb-8 flex items-center gap-3 border-b border-neutral-200 pb-6">
+        <img src="/brand/farmalat-isotipo-blue.svg" alt="" class="h-12 w-12" />
+        <div>
+          <div class="font-heading text-xl font-bold text-neutral-900">{tenant.name}</div>
+          <div class="text-sm text-neutral-500">Portal de autofactura</div>
+        </div>
+      </header>
+
+      {!sale && (
+        <div class="rounded-2xl border border-danger-500 bg-danger-50 p-6 text-center">
+          <h2 class="font-heading text-lg font-bold text-danger-500">Ticket no encontrado</h2>
+          <p class="mt-2 text-sm text-neutral-700">Verifica el folio impreso en tu ticket: <strong class="font-mono">{folio}</strong></p>
+        </div>
+      )}
+
+      {sale && (
+        <section class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-card">
+          <h2 class="font-heading text-base font-bold text-neutral-900">Datos del ticket</h2>
+          <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <dt class="text-xs uppercase tracking-wider text-neutral-500">Folio</dt>
+              <dd class="font-mono font-bold text-neutral-900">{sale.ticketNumber}</dd>
+            </div>
+            <div>
+              <dt class="text-xs uppercase tracking-wider text-neutral-500">Fecha</dt>
+              <dd class="font-semibold text-neutral-900">{fmtDate(sale.createdAt)}</dd>
+            </div>
+            <div>
+              <dt class="text-xs uppercase tracking-wider text-neutral-500">Subtotal</dt>
+              <dd class="font-mono tabular text-neutral-700">{fmt(sale.subtotal)}</dd>
+            </div>
+            <div>
+              <dt class="text-xs uppercase tracking-wider text-neutral-500">IVA</dt>
+              <dd class="font-mono tabular text-neutral-700">{fmt(sale.ivaTotal)}</dd>
+            </div>
+            <div class="col-span-2 border-t border-neutral-100 pt-3">
+              <dt class="text-xs uppercase tracking-wider text-neutral-500">Total</dt>
+              <dd class="font-mono text-2xl font-bold tabular text-brand-blue">{fmt(sale.total)}</dd>
+            </div>
+          </dl>
+        </section>
+      )}
+
+      {sale && alreadyIssued && (
+        <div class="mt-6 rounded-2xl border border-success-500 bg-success-50 p-6 text-center">
+          <h2 class="font-heading text-lg font-bold text-success-500">Este ticket ya fue facturado</h2>
+          <p class="mt-2 text-sm text-neutral-700">UUID: <span class="font-mono">{sale.cfdiUuid}</span></p>
+          <p class="mt-1 text-xs text-neutral-500">Si necesitas el XML, contáctanos.</p>
+        </div>
+      )}
+
+      {sale && !alreadyIssued && isExpired && (
+        <div class="mt-6 rounded-2xl border border-warning-500 bg-warning-50 p-6 text-center">
+          <h2 class="font-heading text-lg font-bold text-warning-500">Ticket fuera de plazo</h2>
+          <p class="mt-2 text-sm text-neutral-700">Los tickets pueden facturarse hasta 30 días después de la compra.</p>
+        </div>
+      )}
+
+      {sale && !alreadyIssued && !isExpired && (
+        <form id="form" class="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 shadow-card">
+          <h2 class="font-heading text-base font-bold text-neutral-900">Tus datos fiscales</h2>
+          <p class="mt-1 text-sm text-neutral-500">Captura tus datos para emitir la factura.</p>
+
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <label class="block md:col-span-2">
+              <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Razón social / Nombre *</span>
+              <input name="name" required class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm uppercase focus:border-blue-300 focus:bg-white focus:outline-none" />
+            </label>
+            <label class="block">
+              <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">RFC *</span>
+              <input name="rfc" required minlength="12" maxlength="13" class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 font-mono text-sm uppercase focus:border-blue-300 focus:bg-white focus:outline-none" />
+            </label>
+            <label class="block">
+              <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Código postal *</span>
+              <input name="zipCode" required pattern="\d{5}" maxlength="5" class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 font-mono text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+            </label>
+            <label class="block">
+              <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Régimen fiscal *</span>
+              <select name="regimenFiscal" required class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm focus:border-blue-300 focus:bg-white focus:outline-none">
+                <option value="">Selecciona</option>
+                {Object.entries(REGIMEN_FISCAL).map(([k, v]) => (<option value={k}>{k} - {v}</option>))}
+              </select>
+            </label>
+            <label class="block">
+              <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Uso CFDI *</span>
+              <select name="usoCfdi" required class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm focus:border-blue-300 focus:bg-white focus:outline-none">
+                <option value="">Selecciona</option>
+                <option value="G03">G03 - Gastos en general</option>
+                <option value="D07">D07 - Honorarios médicos, dentales y gastos hospitalarios</option>
+                <option value="S01">S01 - Sin efectos fiscales</option>
+              </select>
+            </label>
+            <label class="block md:col-span-2">
+              <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Email (para recibir XML y PDF)</span>
+              <input name="email" type="email" class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+            </label>
+          </div>
+
+          <div id="msg" class="mt-4 hidden rounded-lg px-4 py-3 text-sm"></div>
+
+          <input type="hidden" name="tenantSlug" value={slug} />
+          <input type="hidden" name="folio" value={folio} />
+
+          <button type="submit" id="submit" class="mt-6 w-full rounded-xl bg-orange-500 px-6 py-3 font-heading text-base font-bold text-white shadow-md hover:bg-orange-600 disabled:opacity-40">
+            Emitir factura
+          </button>
+
+          <p class="mt-4 text-[11px] leading-relaxed text-neutral-400">
+            Este es un sistema de prueba. Las facturas generadas son <strong>mocks sin timbrar</strong>.
+            En producción se conectará a un PAC autorizado SAT (Facturapi).
+          </p>
+        </form>
+      )}
+
+      <footer class="mt-12 text-center text-xs text-neutral-400">
+        Hecho con <a href="https://farmalat.sopadeletras.art" class="text-brand-blue hover:underline">FarmaLat</a> por <a href="https://laatec.com" class="text-brand-blue hover:underline">Laboratory & Technology</a>
+      </footer>
+    </main>
+
+    <script is:inline>
+      document.getElementById("form")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById("submit");
+        const msg = document.getElementById("msg");
+        msg.className = "mt-4 hidden";
+        btn.disabled = true; btn.textContent = "Procesando...";
+        const fd = new FormData(e.target);
+        const data = Object.fromEntries(fd);
+        data.rfc = (data.rfc + "").toUpperCase();
+        const res = await fetch("/api/public/cfdi-mock", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+        const json = await res.json();
+        if (json.ok) {
+          window.location.href = `/f/${data.tenantSlug}/${data.folio}/factura`;
+        } else {
+          msg.className = "mt-4 rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-500";
+          msg.textContent = json.error || "Error al emitir";
+          btn.disabled = false; btn.textContent = "Emitir factura";
+        }
+      });
+    </script>
+  </body>
+</html>
