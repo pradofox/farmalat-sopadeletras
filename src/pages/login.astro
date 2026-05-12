@@ -1,0 +1,60 @@
+---
+export const prerender = false;
+import AuthLayout from "../layouts/AuthLayout.astro";
+import { readSession, SESSION_COOKIE } from "../lib/session";
+
+// Si ya hay sesion, redirige a app
+const token = Astro.cookies.get(SESSION_COOKIE)?.value ?? "";
+const session = await readSession(token);
+if (session) return Astro.redirect("/app");
+
+const nextUrl = Astro.url.searchParams.get("next") ?? "/app";
+---
+
+<AuthLayout title="Iniciar sesión">
+  <h1 class="font-heading text-3xl font-bold text-neutral-900">Bienvenida de vuelta</h1>
+  <p class="mt-1 text-sm text-neutral-500">Ingresa con tu correo y contraseña.</p>
+
+  <form id="login-form" class="mt-8 space-y-4">
+    <label class="block">
+      <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Email</span>
+      <input name="email" type="email" required autofocus autocomplete="email"
+        class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+    </label>
+    <label class="block">
+      <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Contraseña</span>
+      <input name="password" type="password" required autocomplete="current-password"
+        class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+    </label>
+
+    <div id="error" class="hidden rounded-lg border border-danger-500 bg-danger-50 px-4 py-2.5 text-sm text-danger-500"></div>
+
+    <button type="submit" id="submit" class="w-full rounded-xl bg-brand-blue px-6 py-3 font-heading text-base font-bold text-white shadow-md transition hover:bg-blue-800 disabled:opacity-40">
+      Iniciar sesión
+    </button>
+  </form>
+
+  <p class="mt-6 text-center text-sm text-neutral-500">
+    ¿Tu farmacia aún no usa FarmaLat? <a href="/signup" class="font-semibold text-brand-blue hover:underline">Crear cuenta</a>
+  </p>
+
+  <script is:inline define:vars={{ nextUrl }}>
+    const form = document.getElementById("login-form");
+    const err = document.getElementById("error");
+    const btn = document.getElementById("submit");
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      err.classList.add("hidden");
+      btn.disabled = true; btn.textContent = "Verificando...";
+      const data = Object.fromEntries(new FormData(form));
+      try {
+        const res = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+        const json = await res.json();
+        if (!json.ok) { err.textContent = json.error || "Credenciales inválidas"; err.classList.remove("hidden"); btn.disabled = false; btn.textContent = "Iniciar sesión"; return; }
+        window.location.href = nextUrl;
+      } catch {
+        err.textContent = "Error de red"; err.classList.remove("hidden"); btn.disabled = false; btn.textContent = "Iniciar sesión";
+      }
+    });
+  </script>
+</AuthLayout>

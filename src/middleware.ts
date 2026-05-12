@@ -1,40 +1,46 @@
 /**
- * Middleware: resuelve tenant activo y lo expone en locals.
- * En Bloque D se agregara auth real con cookie de sesion.
- * Por ahora resuelve por slug fijo "alfa" (Farmacia Alfa, piloto).
+ * Middleware: lee cookie de sesion (KV), hidrata locals con userId + tenantId.
+ * Protege rutas /app/* y APIs sensibles redirigiendo a /login si no hay sesion.
  */
 import { defineMiddleware } from "astro:middleware";
-import { getDb, schema } from "./lib/db";
-import { eq } from "drizzle-orm";
+import { readSession, SESSION_COOKIE } from "./lib/session";
 
-const DEFAULT_TENANT_SLUG = "alfa";
-
-let cachedTenantId: number | null = null;
-let cachedUserId: number | null = null;
+const PROTECTED_PREFIXES = ["/app"];
+const PROTECTED_API = [
+  "/api/sales",
+  "/api/products",
+  "/api/products/search",
+  "/api/products/import",
+];
+const PUBLIC_ROUTES = ["/login", "/signup", "/api/auth/login", "/api/auth/signup", "/api/auth/logout", "/api/seed"];
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  if (cachedTenantId == null) {
-    try {
-      const db = getDb();
-      const [tenant] = await db
-        .select({ id: schema.tenants.id })
-        .from(schema.tenants)
-        .where(eq(schema.tenants.slug, DEFAULT_TENANT_SLUG))
-        .limit(1);
-      if (tenant) {
-        cachedTenantId = tenant.id;
-        const [user] = await db
-          .select({ id: schema.users.id })
-          .from(schema.users)
-          .where(eq(schema.users.tenantId, tenant.id))
-          .limit(1);
-        cachedUserId = user?.id ?? null;
-      }
-    } catch {
-      // Si el binding aun no esta listo (ej: ruta estatica) saltamos
+  const url = new URL(context.request.url);
+  const path = url.pathname;
+
+  const token = context.cookies.get(SESSION_COOKIE)?.value ?? "";
+  const session = await readSession(token);
+
+  context.locals.tenantId = session?.tenantId ?? 0;
+  context.locals.userId = session?.userId ?? null;
+  (context.locals as any).session = session;
+
+  // Rutas publicas siempre pasan
+  if (PUBLIC_ROUTES.includes(path)) return next();
+
+  // Rutas protegidas: redirigir si no hay sesion
+  const isProtected = PROTECTED_PREFIXES.some((p) => path.startsWith(p))
+    || PROTECTED_API.some((p) => path === p || path.startsWith(p + "/"));
+
+  if (isProtected && !session) {
+    if (path.startsWith("/api/")) {
+      return new Response(JSON.stringify({ ok: false, error: "No autorizado" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
+    return context.redirect(`/login?next=${encodeURIComponent(path)}`);
   }
-  context.locals.tenantId = cachedTenantId ?? 1;
-  context.locals.userId = cachedUserId;
+
   return next();
 });

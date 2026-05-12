@@ -4,9 +4,11 @@
  */
 import type { DB } from "./db";
 import { schema } from "./db";
+import { hashPassword } from "./auth";
 import { eq } from "drizzle-orm";
 
 const TENANT_SLUG = "alfa";
+const DEMO_PASSWORD = "lili2026";
 
 export async function seed(db: DB) {
   // 1) Tenant
@@ -36,10 +38,11 @@ export async function seed(db: DB) {
   }).returning();
 
   // 3) Usuario admin (Lili)
+  const passwordHash = await hashPassword(DEMO_PASSWORD);
   await db.insert(schema.users).values({
     tenantId: tenant.id,
     email: "lilian@farmacia-alfa.mx",
-    passwordHash: "placeholder",
+    passwordHash,
     name: "Lilian Balderas",
     role: "owner",
     defaultWarehouseId: warehouse.id,
@@ -139,5 +142,11 @@ export async function seed(db: DB) {
     });
   }
 
-  return { ok: true, message: "Seed completado", tenantId: tenant.id, products: insertedProducts.length };
+  return {
+    ok: true,
+    message: "Seed completado",
+    tenantId: tenant.id,
+    products: insertedProducts.length,
+    credentials: { email: "lilian@farmacia-alfa.mx", password: DEMO_PASSWORD },
+  };
 }

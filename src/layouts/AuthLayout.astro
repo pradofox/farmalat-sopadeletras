@@ -1,0 +1,53 @@
+---
+import "../styles/global.css";
+
+interface Props { title?: string }
+const { title = "FarmaLat" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es-MX">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10069F" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+    <title>{title} · FarmaLat</title>
+  </head>
+  <body class="min-h-screen bg-neutral-50 text-neutral-900 antialiased">
+    <div class="grid min-h-screen lg:grid-cols-2">
+      <!-- Side branding -->
+      <aside class="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-blue-700 via-blue-800 to-blue-900 p-12 text-white lg:flex">
+        <a href="/" class="flex items-center gap-3">
+          <img src="/brand/farmalat-isotipo-white.svg" alt="" class="h-12 w-12" />
+          <span class="font-heading text-2xl font-bold">FarmaLat</span>
+        </a>
+        <div>
+          <h2 class="font-heading text-4xl font-bold leading-tight">
+            Tu farmacia, lista<br />en menos de 5 minutos.
+          </h2>
+          <p class="mt-4 max-w-md text-lg text-white/70">
+            POS, inventario, CFDI 4.0 y libro de control COFEPRIS en una sola plataforma web hecha en México por LAATEC.
+          </p>
+        </div>
+        <p class="text-xs text-white/40">
+          © 2025 Laboratory and Technology S.A. de C.V.
+        </p>
+      </aside>
+
+      <!-- Form -->
+      <main class="flex items-center justify-center p-6 md:p-12">
+        <div class="w-full max-w-md">
+          <a href="/" class="mb-8 flex items-center gap-3 lg:hidden">
+            <img src="/brand/farmalat-isotipo-blue.svg" alt="" class="h-10 w-10" />
+            <span class="font-heading text-xl font-bold text-brand-blue">FarmaLat</span>
+          </a>
+          <slot />
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

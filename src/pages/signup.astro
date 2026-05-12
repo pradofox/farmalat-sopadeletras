@@ -1,0 +1,90 @@
+---
+export const prerender = false;
+import AuthLayout from "../layouts/AuthLayout.astro";
+import { readSession, SESSION_COOKIE } from "../lib/session";
+
+const token = Astro.cookies.get(SESSION_COOKIE)?.value ?? "";
+const session = await readSession(token);
+if (session) return Astro.redirect("/app");
+---
+
+<AuthLayout title="Crear cuenta">
+  <h1 class="font-heading text-3xl font-bold text-neutral-900">Da de alta tu farmacia</h1>
+  <p class="mt-1 text-sm text-neutral-500">Prueba 30 días gratis. Sin tarjeta de crédito.</p>
+
+  <form id="signup-form" class="mt-8 space-y-4">
+    <label class="block">
+      <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Nombre de tu farmacia</span>
+      <input name="pharmacyName" type="text" required placeholder="Farmacia Alfa"
+        class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+    </label>
+    <label class="block">
+      <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Tu nombre</span>
+      <input name="yourName" type="text" required autocomplete="name"
+        class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+    </label>
+    <label class="block">
+      <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Email</span>
+      <input name="email" type="email" required autocomplete="email"
+        class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+    </label>
+    <label class="block">
+      <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Contraseña</span>
+      <input name="password" type="password" required minlength="8" autocomplete="new-password"
+        class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+      <span class="mt-1 block text-[10px] text-neutral-400">Mínimo 8 caracteres</span>
+    </label>
+
+    <div class="grid gap-3 sm:grid-cols-2">
+      <label class="block">
+        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Teléfono (opcional)</span>
+        <input name="phone" type="tel" autocomplete="tel" class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+      </label>
+      <label class="block">
+        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">RFC (opcional)</span>
+        <input name="rfc" type="text" placeholder="13 caracteres" class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 font-mono text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+      </label>
+    </div>
+
+    <div id="error" class="hidden rounded-lg border border-danger-500 bg-danger-50 px-4 py-2.5 text-sm text-danger-500"></div>
+
+    <button type="submit" id="submit" class="w-full rounded-xl bg-orange-500 px-6 py-3 font-heading text-base font-bold text-white shadow-md transition hover:bg-orange-600 disabled:opacity-40">
+      Crear mi cuenta gratis
+    </button>
+
+    <p class="text-center text-[11px] text-neutral-400">
+      Al crear tu cuenta aceptas que LAATEC procese los datos para ofrecerte el servicio. No compartimos tu información.
+    </p>
+  </form>
+
+  <p class="mt-6 text-center text-sm text-neutral-500">
+    ¿Ya tienes cuenta? <a href="/login" class="font-semibold text-brand-blue hover:underline">Iniciar sesión</a>
+  </p>
+
+  <script is:inline>
+    const form = document.getElementById("signup-form");
+    const err = document.getElementById("error");
+    const btn = document.getElementById("submit");
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      err.classList.add("hidden");
+      btn.disabled = true; btn.textContent = "Creando cuenta...";
+      const data = Object.fromEntries(new FormData(form));
+      try {
+        const res = await fetch("/api/auth/signup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+        const json = await res.json();
+        if (!json.ok) {
+          err.textContent = json.error || "No se pudo crear la cuenta";
+          err.classList.remove("hidden");
+          btn.disabled = false; btn.textContent = "Crear mi cuenta gratis";
+          return;
+        }
+        window.location.href = "/app";
+      } catch {
+        err.textContent = "Error de red";
+        err.classList.remove("hidden");
+        btn.disabled = false; btn.textContent = "Crear mi cuenta gratis";
+      }
+    });
+  </script>
+</AuthLayout>

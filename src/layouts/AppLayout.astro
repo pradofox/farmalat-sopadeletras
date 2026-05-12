@@ -1,5 +1,7 @@
 ---
 import "../styles/global.css";
+import { getDb, schema } from "../lib/db";
+import { eq } from "drizzle-orm";
 
 interface Props {
   title?: string;
@@ -7,6 +9,22 @@ interface Props {
 }
 
 const { title = "FarmaLat", activeRoute = "" } = Astro.props;
+
+const sessionAny = (Astro.locals as any).session as { name?: string; email?: string; tenantId?: number } | undefined;
+const sessionName = sessionAny?.name ?? "Usuario";
+const initials = sessionName.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+
+let pharmacyName = "Farmacia";
+let warehouseLabel = "Matriz";
+if (sessionAny?.tenantId) {
+  try {
+    const db = getDb();
+    const [t] = await db.select({ name: schema.tenants.name }).from(schema.tenants).where(eq(schema.tenants.id, sessionAny.tenantId)).limit(1);
+    if (t) pharmacyName = t.name;
+    const [w] = await db.select({ name: schema.warehouses.name }).from(schema.warehouses).where(eq(schema.warehouses.tenantId, sessionAny.tenantId)).limit(1);
+    if (w) warehouseLabel = w.name;
+  } catch {}
+}
 
 const nav = [
   {
@@ -141,12 +159,23 @@ const icons: Record<string, string> = {
         <div class="border-t border-white/10 p-4">
           <div class="flex items-center gap-3">
             <div class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-orange font-heading text-sm font-bold">
-              LB
+              {initials}
             </div>
             <div class="min-w-0 flex-1">
-              <div class="truncate text-sm font-semibold text-white">Lilian Balderas</div>
-              <div class="truncate text-xs text-white/50">Farmacia Alfa · Matriz</div>
+              <div class="truncate text-sm font-semibold text-white">{sessionName}</div>
+              <div class="truncate text-xs text-white/50">{pharmacyName} · {warehouseLabel}</div>
             </div>
+            <button
+              type="button"
+              id="logout-btn"
+              class="rounded-lg p-2 text-white/60 transition hover:bg-white/10 hover:text-white"
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+            >
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+              </svg>
+            </button>
           </div>
         </div>
       </aside>
@@ -232,6 +261,15 @@ const icons: Record<string, string> = {
       openBtn?.addEventListener("click", open);
       closeBtn?.addEventListener("click", close);
       backdrop?.addEventListener("click", close);
+
+      // Logout
+      const logoutBtn = document.getElementById("logout-btn");
+      logoutBtn?.addEventListener("click", async () => {
+        try {
+          await fetch("/api/auth/logout", { method: "POST" });
+        } catch {}
+        window.location.href = "/login";
+      });
     </script>
   </body>
 </html>
