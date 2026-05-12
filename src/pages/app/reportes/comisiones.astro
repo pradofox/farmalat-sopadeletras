@@ -1,0 +1,169 @@
+---
+export const prerender = false;
+import AppLayout from "../../../layouts/AppLayout.astro";
+import Kpi from "../../../components/Kpi.astro";
+import { getDb, schema } from "../../../lib/db";
+import { and, eq, gte, lte, sql, desc } from "drizzle-orm";
+
+const db = getDb();
+const tenantId = Astro.locals.tenantId;
+
+const today = new Date(); today.setHours(23, 59, 59, 999);
+const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+const fromStr = Astro.url.searchParams.get("from") ?? monthStart.toISOString().slice(0, 10);
+const toStr = Astro.url.searchParams.get("to") ?? today.toISOString().slice(0, 10);
+
+const fromTs = new Date(fromStr + "T00:00:00").getTime();
+const toTs = new Date(toStr + "T23:59:59.999").getTime();
+
+// Comisiones agregadas por medico:
+// Join inventory_movements (type=sale) -> prescriptions -> doctors
+// Filtra solo movimientos que vengan de venta con receta, donde el producto
+// tenga commission_pct > 0 (recuperamos commission_pct y costo desde products)
+const rows = await db
+  .select({
+    saleId: schema.inventoryMovements.saleId,
+    productName: schema.products.name,
+    quantity: sql<number>`abs(${schema.inventoryMovements.quantity})`,
+    commissionPct: schema.products.commissionPct,
+    publicPrice: schema.products.publicPrice,
+    doctorId: schema.prescriptions.doctorId,
+    doctorName: schema.doctors.fullName,
+    doctorCedula: schema.doctors.cedula,
+    createdAt: schema.inventoryMovements.createdAt,
+  })
+  .from(schema.inventoryMovements)
+  .innerJoin(schema.prescriptions, eq(schema.prescriptions.id, schema.inventoryMovements.prescriptionId))
+  .innerJoin(schema.doctors, eq(schema.doctors.id, schema.prescriptions.doctorId))
+  .innerJoin(schema.products, eq(schema.products.id, schema.inventoryMovements.productId))
+  .where(
+    and(
+      eq(schema.inventoryMovements.tenantId, tenantId),
+      eq(schema.inventoryMovements.type, "sale"),
+      gte(schema.inventoryMovements.createdAt, new Date(fromTs)),
+      lte(schema.inventoryMovements.createdAt, new Date(toTs)),
+    ),
+  )
+  .orderBy(desc(schema.inventoryMovements.createdAt))
+  .limit(2000);
+
+const enriched = rows.map((r) => {
+  const importe = Number(r.quantity) * Number(r.publicPrice);
+  const comision = importe * (Number(r.commissionPct) / 100);
+  return { ...r, importe, comision };
+}).filter((r) => r.comision > 0);
+
+// Agrupar por medico
+const byDoctor: Record<string, { name: string; cedula: string | null; count: number; sales: number; commission: number }> = {};
+for (const r of enriched) {
+  const key = String(r.doctorId);
+  if (!byDoctor[key]) byDoctor[key] = { name: r.doctorName!, cedula: r.doctorCedula, count: 0, sales: 0, commission: 0 };
+  byDoctor[key].count += 1;
+  byDoctor[key].sales += r.importe;
+  byDoctor[key].commission += r.comision;
+}
+
+const totalCommission = enriched.reduce((a, r) => a + r.comision, 0);
+const totalSales = enriched.reduce((a, r) => a + r.importe, 0);
+
+const fmt = (n: number) => "$" + Number(n).toLocaleString("es-MX", { minimumFractionDigits: 2 });
+const fmtDate = (d: Date | null) => d ? new Date(d).toLocaleDateString("es-MX", { dateStyle: "short" }) : "—";
+---
+
+<AppLayout title="Comisiones" activeRoute="">
+  <div class="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
+    <header class="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="font-heading text-2xl font-bold text-neutral-900 md:text-3xl">Comisiones por médico</h1>
+        <p class="mt-1 text-sm text-neutral-500">Solo ventas con receta enlazada a médico</p>
+      </div>
+    </header>
+
+    <form method="get" class="mb-6 grid gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-card sm:grid-cols-[1fr_1fr_auto]">
+      <label class="block">
+        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Desde</span>
+        <input type="date" name="from" value={fromStr} class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+      </label>
+      <label class="block">
+        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Hasta</span>
+        <input type="date" name="to" value={toStr} class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+      </label>
+      <div class="flex items-end">
+        <button type="submit" class="rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white">Aplicar</button>
+      </div>
+    </form>
+
+    <section class="mb-6 grid gap-4 md:grid-cols-3">
+      <Kpi label="Médicos con comisión" value={String(Object.keys(byDoctor).length)} />
+      <Kpi label="Ventas con receta" value={fmt(totalSales)} mono />
+      <Kpi label="Comisión a pagar" value={fmt(totalCommission)} mono primary />
+    </section>
+
+    <section class="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-card">
+      <header class="border-b border-neutral-200 px-5 py-4">
+        <h2 class="font-heading text-base font-bold text-neutral-900">Resumen por médico</h2>
+      </header>
+      <table class="w-full text-sm">
+        <thead class="bg-neutral-50">
+          <tr class="text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
+            <th class="px-4 py-3 md:px-5">Médico</th>
+            <th class="px-4 py-3 md:px-5">Cédula</th>
+            <th class="px-4 py-3 text-right md:px-5">Recetas surtidas</th>
+            <th class="px-4 py-3 text-right md:px-5">Importe vendido</th>
+            <th class="px-4 py-3 text-right md:px-5">Comisión</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-neutral-100">
+          {Object.values(byDoctor).sort((a, b) => b.commission - a.commission).map((d) => (
+            <tr>
+              <td class="px-4 py-3 font-medium text-neutral-900 md:px-5">{d.name}</td>
+              <td class="px-4 py-3 font-mono text-xs text-neutral-700 md:px-5">{d.cedula ?? "—"}</td>
+              <td class="px-4 py-3 text-right font-mono tabular text-neutral-700 md:px-5">{d.count}</td>
+              <td class="px-4 py-3 text-right font-mono tabular text-neutral-700 md:px-5">{fmt(d.sales)}</td>
+              <td class="px-4 py-3 text-right font-mono font-bold tabular text-brand-blue md:px-5">{fmt(d.commission)}</td>
+            </tr>
+          ))}
+          {Object.keys(byDoctor).length === 0 && (
+            <tr><td colspan="5" class="px-5 py-16 text-center text-sm text-neutral-400">Sin comisiones generadas en el rango.</td></tr>
+          )}
+        </tbody>
+      </table>
+    </section>
+
+    {enriched.length > 0 && (
+      <section class="mt-6 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-card">
+        <header class="border-b border-neutral-200 px-5 py-4">
+          <h2 class="font-heading text-base font-bold text-neutral-900">Detalle por receta</h2>
+        </header>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-neutral-50">
+              <tr class="text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                <th class="px-4 py-3 md:px-5">Fecha</th>
+                <th class="px-4 py-3 md:px-5">Producto</th>
+                <th class="hidden px-4 py-3 md:table-cell md:px-5">Médico</th>
+                <th class="px-4 py-3 text-right md:px-5">Cant.</th>
+                <th class="px-4 py-3 text-right md:px-5">Importe</th>
+                <th class="px-4 py-3 text-right md:px-5">% Com.</th>
+                <th class="px-4 py-3 text-right md:px-5">Comisión</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-neutral-100">
+              {enriched.slice(0, 200).map((r) => (
+                <tr>
+                  <td class="px-4 py-3 text-neutral-600 md:px-5">{fmtDate(r.createdAt)}</td>
+                  <td class="px-4 py-3 text-neutral-900 md:px-5">{r.productName}</td>
+                  <td class="hidden px-4 py-3 text-neutral-600 md:table-cell md:px-5">{r.doctorName}</td>
+                  <td class="px-4 py-3 text-right font-mono text-neutral-700 md:px-5">{r.quantity}</td>
+                  <td class="px-4 py-3 text-right font-mono tabular text-neutral-700 md:px-5">{fmt(r.importe)}</td>
+                  <td class="px-4 py-3 text-right font-mono text-xs text-neutral-500 md:px-5">{r.commissionPct}%</td>
+                  <td class="px-4 py-3 text-right font-mono font-semibold tabular text-brand-blue md:px-5">{fmt(r.comision)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    )}
+  </div>
+</AppLayout>

@@ -1,0 +1,102 @@
+---
+export const prerender = false;
+import AppLayout from "../../../layouts/AppLayout.astro";
+import Kpi from "../../../components/Kpi.astro";
+import { getDb, schema } from "../../../lib/db";
+import { and, eq, sql } from "drizzle-orm";
+
+const db = getDb();
+const tenantId = Astro.locals.tenantId;
+
+// Valor de inventario actual por departamento
+const byDept = await db
+  .select({
+    dept: schema.departments.name,
+    items: sql<number>`count(${schema.inventory.id})`,
+    units: sql<number>`coalesce(sum(${schema.inventory.quantity}), 0)`,
+    value: sql<number>`coalesce(sum(${schema.inventory.quantity} * ${schema.inventory.lastCost}), 0)`,
+  })
+  .from(schema.inventory)
+  .innerJoin(schema.products, eq(schema.products.id, schema.inventory.productId))
+  .leftJoin(schema.departments, eq(schema.departments.id, schema.products.departmentId))
+  .where(eq(schema.inventory.tenantId, tenantId))
+  .groupBy(schema.departments.name)
+  .orderBy(sql`value desc`);
+
+const total = byDept.reduce((a, r) => a + Number(r.value), 0);
+const totalUnits = byDept.reduce((a, r) => a + Number(r.units), 0);
+const totalSkus = byDept.reduce((a, r) => a + Number(r.items), 0);
+
+// Top 20 productos por valor
+const topProducts = await db
+  .select({
+    name: schema.products.name,
+    quantity: schema.inventory.quantity,
+    cost: schema.inventory.lastCost,
+    value: sql<number>`${schema.inventory.quantity} * ${schema.inventory.lastCost}`,
+  })
+  .from(schema.inventory)
+  .innerJoin(schema.products, eq(schema.products.id, schema.inventory.productId))
+  .where(eq(schema.inventory.tenantId, tenantId))
+  .orderBy(sql`value desc`)
+  .limit(20);
+
+const fmt = (n: number) => "$" + Number(n).toLocaleString("es-MX", { minimumFractionDigits: 2 });
+const maxValue = Math.max(1, ...byDept.map((r) => Number(r.value)));
+---
+
+<AppLayout title="Valor inventario" activeRoute="">
+  <div class="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
+    <header class="mb-6">
+      <h1 class="font-heading text-2xl font-bold text-neutral-900 md:text-3xl">Valor de inventario</h1>
+      <p class="mt-1 text-sm text-neutral-500">Existencia actual valorizada a costo</p>
+    </header>
+
+    <section class="mb-6 grid gap-4 md:grid-cols-3">
+      <Kpi label="SKUs activos" value={totalSkus.toLocaleString("es-MX")} />
+      <Kpi label="Unidades totales" value={Number(totalUnits).toLocaleString("es-MX")} />
+      <Kpi label="Valor a costo" value={fmt(total)} mono primary />
+    </section>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+      <section class="rounded-2xl border border-neutral-200 bg-white shadow-card">
+        <header class="border-b border-neutral-200 px-5 py-4">
+          <h2 class="font-heading text-base font-bold text-neutral-900">Por departamento</h2>
+        </header>
+        <div class="divide-y divide-neutral-100">
+          {byDept.map((d) => (
+            <div class="px-5 py-3">
+              <div class="flex items-center justify-between text-sm">
+                <span class="font-medium text-neutral-900">{d.dept ?? "Sin departamento"}</span>
+                <span class="font-mono font-semibold tabular text-brand-blue">{fmt(Number(d.value))}</span>
+              </div>
+              <div class="mt-1 h-2 rounded-full bg-neutral-100">
+                <div class="h-2 rounded-full bg-brand-blue" style={`width: ${(Number(d.value) / maxValue) * 100}%`}></div>
+              </div>
+              <div class="mt-1 text-xs text-neutral-500">{Number(d.units)} unidades · {Number(d.items)} SKUs</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="rounded-2xl border border-neutral-200 bg-white shadow-card">
+        <header class="border-b border-neutral-200 px-5 py-4">
+          <h2 class="font-heading text-base font-bold text-neutral-900">Top 20 productos por valor</h2>
+        </header>
+        <ol class="divide-y divide-neutral-100">
+          {topProducts.map((p, i) => (
+            <li class="flex items-center gap-3 px-5 py-3">
+              <span class="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-blue-50 font-mono text-xs font-bold text-brand-blue">{i + 1}</span>
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-sm font-medium text-neutral-900">{p.name}</div>
+                <div class="text-xs text-neutral-500">{Number(p.quantity)} × {fmt(Number(p.cost))}</div>
+              </div>
+              <div class="flex-none text-right font-mono text-sm font-semibold tabular text-neutral-900">{fmt(Number(p.value))}</div>
+            </li>
+          ))}
+          {topProducts.length === 0 && <li class="px-5 py-8 text-center text-sm text-neutral-400">Sin inventario</li>}
+        </ol>
+      </section>
+    </div>
+  </div>
+</AppLayout>
