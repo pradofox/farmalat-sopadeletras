@@ -1,0 +1,58 @@
+---
+export const prerender = false;
+import AppLayout from "../../../layouts/AppLayout.astro";
+
+const session = (Astro.locals as any).session;
+---
+
+<AppLayout title="Mi perfil" activeRoute="">
+  <div class="mx-auto max-w-2xl px-4 py-6 md:px-6 md:py-8">
+    <header class="mb-6">
+      <a href="/app/configuracion" class="inline-flex items-center gap-2 text-sm font-semibold text-brand-blue hover:underline">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Volver a configuración
+      </a>
+      <h1 class="mt-3 font-heading text-2xl font-bold text-neutral-900 md:text-3xl">Mi perfil</h1>
+      <p class="mt-1 text-sm text-neutral-500">{session?.name} · {session?.email}</p>
+    </header>
+
+    <section class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-card">
+      <h2 class="mb-4 font-heading text-base font-bold text-neutral-900">Cambiar contraseña</h2>
+      <form id="form-pwd" class="space-y-3">
+        <label class="block">
+          <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Contraseña actual</span>
+          <input name="currentPassword" type="password" required class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+        </label>
+        <label class="block">
+          <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Nueva contraseña</span>
+          <input name="newPassword" type="password" required minlength="8" class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+          <span class="mt-1 block text-[10px] text-neutral-400">Mínimo 8 caracteres</span>
+        </label>
+        <div id="msg" class="hidden rounded-lg px-4 py-3 text-sm"></div>
+        <div class="flex justify-end pt-2">
+          <button type="submit" class="rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white">Actualizar contraseña</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</AppLayout>
+
+<script is:inline>
+  document.getElementById("form-pwd")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const data = Object.fromEntries(fd);
+    const msg = document.getElementById("msg");
+    msg.className = "hidden";
+    const res = await fetch("/api/auth/change-password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+    const json = await res.json();
+    if (json.ok) {
+      msg.className = "rounded-lg border border-success-500 bg-success-50 px-4 py-3 text-sm text-success-500";
+      msg.textContent = "Contraseña actualizada.";
+      e.target.reset();
+    } else {
+      msg.className = "rounded-lg border border-danger-500 bg-danger-50 px-4 py-3 text-sm text-danger-500";
+      msg.textContent = json.error || "Error";
+    }
+  });
+</script>

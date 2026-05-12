@@ -1,0 +1,41 @@
+---
+export const prerender = false;
+import AppLayout from "../../layouts/AppLayout.astro";
+
+const cards = [
+  { href: "/app/configuracion/farmacia",    title: "Datos de la farmacia", desc: "Razón social, RFC, régimen fiscal, contacto", icon: "building" },
+  { href: "/app/configuracion/sucursales",  title: "Sucursales",            desc: "Almacenes, líneas de ticket por sucursal",    icon: "store" },
+  { href: "/app/configuracion/usuarios",    title: "Usuarios y permisos",   desc: "Invitar cajeros, roles, permisos",            icon: "users" },
+  { href: "/app/configuracion/perfil",      title: "Mi perfil",             desc: "Cambiar contraseña, preferencias",            icon: "user" },
+];
+
+const icons: Record<string, string> = {
+  building: "M3 21h18M5 21V3l7-2 7 2v18M9 21V9h6v12",
+  store:    "M3 9l1.5-6h15L21 9M5 9v12h14V9M9 14h6",
+  users:    "M16 11a4 4 0 11-8 0 4 4 0 018 0zM4 21v-2a4 4 0 014-4h8a4 4 0 014 4v2",
+  user:     "M12 12a4 4 0 100-8 4 4 0 000 8zM6 21v-2a6 6 0 0112 0v2",
+};
+---
+
+<AppLayout title="Configuración" activeRoute="">
+  <div class="mx-auto max-w-6xl px-4 py-6 md:px-6 md:py-8">
+    <header class="mb-8">
+      <h1 class="font-heading text-2xl font-bold text-neutral-900 md:text-3xl">Configuración</h1>
+      <p class="mt-1 text-sm text-neutral-500">Administra tu farmacia, sucursales, equipo y preferencias.</p>
+    </header>
+
+    <div class="grid gap-5 md:grid-cols-2">
+      {cards.map((c) => (
+        <a href={c.href} class="flex items-start gap-4 rounded-2xl border border-neutral-200 bg-white p-6 shadow-card transition hover:border-blue-300 hover:bg-blue-50/40">
+          <div class="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-brand-blue text-white">
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d={icons[c.icon]}/></svg>
+          </div>
+          <div>
+            <h2 class="font-heading text-lg font-bold text-neutral-900">{c.title}</h2>
+            <p class="mt-1 text-sm text-neutral-500">{c.desc}</p>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</AppLayout>
