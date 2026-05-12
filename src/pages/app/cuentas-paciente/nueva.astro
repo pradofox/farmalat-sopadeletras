@@ -1,0 +1,25 @@
+---
+export const prerender = false;
+import AppLayout from "../../../layouts/AppLayout.astro";
+import PatientAccountBuilder from "../../../components/PatientAccountBuilder";
+import { getDb, schema } from "../../../lib/db";
+import { eq } from "drizzle-orm";
+
+const db = getDb();
+const tenantId = Astro.locals.tenantId;
+const warehouses = await db.select({ id: schema.warehouses.id, name: schema.warehouses.name })
+  .from(schema.warehouses).where(eq(schema.warehouses.tenantId, tenantId));
+---
+
+<AppLayout title="Nueva cuenta paciente" activeRoute="">
+  <div class="mx-auto max-w-3xl px-4 py-6 md:px-6 md:py-8">
+    <header class="mb-6">
+      <a href="/app/cuentas-paciente" class="inline-flex items-center gap-2 text-sm font-semibold text-brand-blue hover:underline">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Volver a cuentas-paciente
+      </a>
+      <h1 class="mt-3 font-heading text-2xl font-bold text-neutral-900 md:text-3xl">Abrir cuenta hospitalaria</h1>
+    </header>
+    <PatientAccountBuilder client:load warehouses={warehouses} />
+  </div>
+</AppLayout>

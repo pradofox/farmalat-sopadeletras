@@ -410,6 +410,67 @@ export const transferItems = sqliteTable("transfer_items", {
 ]);
 
 // ============================================================
+// PATIENTS - pacientes para farmacia hospitalaria
+// ============================================================
+export const patients = sqliteTable("patients", {
+  id: id(),
+  tenantId: integer("tenant_id").notNull().references(() => tenants.id),
+  identifier: text("identifier"),       // expediente, CURP, número de cama
+  fullName: text("full_name").notNull(),
+  birthDate: ts("birth_date"),
+  phone: text("phone"),
+  email: text("email"),
+  notes: text("notes"),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
+}, (t) => [
+  index("patients_tenant_idx").on(t.tenantId),
+  index("patients_identifier_idx").on(t.tenantId, t.identifier),
+]);
+
+// ============================================================
+// PATIENT_ACCOUNTS - cuentas de hospitalizacion
+// ============================================================
+export const patientAccounts = sqliteTable("patient_accounts", {
+  id: id(),
+  tenantId: integer("tenant_id").notNull().references(() => tenants.id),
+  patientId: integer("patient_id").notNull().references(() => patients.id),
+  warehouseId: integer("warehouse_id").notNull().references(() => warehouses.id),
+  accountNumber: text("account_number").notNull(),
+  status: text("status", { enum: ["open", "closed", "cancelled"] }).notNull().default("open"),
+  payerType: text("payer_type", { enum: ["private", "insurance", "imss", "issste", "other"] }).notNull().default("private"),
+  bedNumber: text("bed_number"),
+  admittedAt: ts("admitted_at"),
+  dischargedAt: ts("discharged_at"),
+  totalCharged: real("total_charged").notNull().default(0),
+  notes: text("notes"),
+  saleId: integer("sale_id"),           // cuando se cierra, se crea una sale
+  userId: integer("user_id").references(() => users.id),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
+}, (t) => [
+  index("patient_accounts_tenant_idx").on(t.tenantId, t.status),
+  index("patient_accounts_patient_idx").on(t.patientId),
+]);
+
+// ============================================================
+// PATIENT_ACCOUNT_ITEMS - cargos por consumo
+// ============================================================
+export const patientAccountItems = sqliteTable("patient_account_items", {
+  id: id(),
+  accountId: integer("account_id").notNull().references(() => patientAccounts.id),
+  productId: integer("product_id").notNull().references(() => products.id),
+  productName: text("product_name").notNull(),
+  quantity: real("quantity").notNull(),
+  unitPrice: real("unit_price").notNull(),
+  ivaPct: real("iva_pct").notNull().default(0),
+  subtotal: real("subtotal").notNull(),
+  total: real("total").notNull(),
+  doctorId: integer("doctor_id").references(() => doctors.id),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
+}, (t) => [
+  index("paitems_account_idx").on(t.accountId),
+]);
+
+// ============================================================
 // AUDIT_LOG - bitácora de cambios críticos
 // ============================================================
 export const auditLog = sqliteTable("audit_log", {

@@ -100,6 +100,63 @@ CREATE TABLE `inventory_movements` (
 --> statement-breakpoint
 CREATE INDEX `movs_book_idx` ON `inventory_movements` (`tenant_id`,`warehouse_id`,`controlled_group`,`created_at`);--> statement-breakpoint
 CREATE INDEX `movs_product_idx` ON `inventory_movements` (`product_id`,`created_at`);--> statement-breakpoint
+CREATE TABLE `patient_account_items` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`account_id` integer NOT NULL,
+	`product_id` integer NOT NULL,
+	`product_name` text NOT NULL,
+	`quantity` real NOT NULL,
+	`unit_price` real NOT NULL,
+	`iva_pct` real DEFAULT 0 NOT NULL,
+	`subtotal` real NOT NULL,
+	`total` real NOT NULL,
+	`doctor_id` integer,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`account_id`) REFERENCES `patient_accounts`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`doctor_id`) REFERENCES `doctors`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE INDEX `paitems_account_idx` ON `patient_account_items` (`account_id`);--> statement-breakpoint
+CREATE TABLE `patient_accounts` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`tenant_id` integer NOT NULL,
+	`patient_id` integer NOT NULL,
+	`warehouse_id` integer NOT NULL,
+	`account_number` text NOT NULL,
+	`status` text DEFAULT 'open' NOT NULL,
+	`payer_type` text DEFAULT 'private' NOT NULL,
+	`bed_number` text,
+	`admitted_at` integer,
+	`discharged_at` integer,
+	`total_charged` real DEFAULT 0 NOT NULL,
+	`notes` text,
+	`sale_id` integer,
+	`user_id` integer,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`patient_id`) REFERENCES `patients`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE INDEX `patient_accounts_tenant_idx` ON `patient_accounts` (`tenant_id`,`status`);--> statement-breakpoint
+CREATE INDEX `patient_accounts_patient_idx` ON `patient_accounts` (`patient_id`);--> statement-breakpoint
+CREATE TABLE `patients` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`tenant_id` integer NOT NULL,
+	`identifier` text,
+	`full_name` text NOT NULL,
+	`birth_date` integer,
+	`phone` text,
+	`email` text,
+	`notes` text,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE INDEX `patients_tenant_idx` ON `patients` (`tenant_id`);--> statement-breakpoint
+CREATE INDEX `patients_identifier_idx` ON `patients` (`tenant_id`,`identifier`);--> statement-breakpoint
 CREATE TABLE `payments` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`sale_id` integer NOT NULL,

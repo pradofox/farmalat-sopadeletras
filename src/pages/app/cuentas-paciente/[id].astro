@@ -1,0 +1,108 @@
+---
+export const prerender = false;
+import AppLayout from "../../../layouts/AppLayout.astro";
+import PatientAccountDetail from "../../../components/PatientAccountDetail";
+import { getDb, schema } from "../../../lib/db";
+import { and, eq } from "drizzle-orm";
+
+const db = getDb();
+const tenantId = Astro.locals.tenantId;
+const id = Number(Astro.params.id);
+
+const [account] = await db
+  .select({
+    id: schema.patientAccounts.id,
+    accountNumber: schema.patientAccounts.accountNumber,
+    status: schema.patientAccounts.status,
+    payerType: schema.patientAccounts.payerType,
+    bedNumber: schema.patientAccounts.bedNumber,
+    admittedAt: schema.patientAccounts.admittedAt,
+    dischargedAt: schema.patientAccounts.dischargedAt,
+    totalCharged: schema.patientAccounts.totalCharged,
+    notes: schema.patientAccounts.notes,
+    saleId: schema.patientAccounts.saleId,
+    warehouseId: schema.patientAccounts.warehouseId,
+    patientName: schema.patients.fullName,
+    patientIdentifier: schema.patients.identifier,
+  })
+  .from(schema.patientAccounts)
+  .leftJoin(schema.patients, eq(schema.patientAccounts.patientId, schema.patients.id))
+  .where(and(eq(schema.patientAccounts.id, id), eq(schema.patientAccounts.tenantId, tenantId)))
+  .limit(1);
+
+if (!account) return Astro.redirect("/app/cuentas-paciente");
+
+const items = await db.select().from(schema.patientAccountItems).where(eq(schema.patientAccountItems.accountId, id));
+
+const fmtDate = (d: Date | null) => d ? new Date(d).toLocaleDateString("es-MX", { dateStyle: "medium" }) : "—";
+const payerLabel: Record<string, string> = { private: "Particular", insurance: "Aseguradora", imss: "IMSS", issste: "ISSSTE", other: "Otro" };
+
+const statusBadge: Record<string, { label: string; cls: string }> = {
+  open:      { label: "Abierta",   cls: "bg-warning-50 text-warning-500" },
+  closed:    { label: "Cerrada",   cls: "bg-success-50 text-success-500" },
+  cancelled: { label: "Cancelada", cls: "bg-danger-50 text-danger-500" },
+};
+const st = statusBadge[account.status] ?? statusBadge.open;
+---
+
+<AppLayout title={account.accountNumber} activeRoute="">
+  <div class="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
+    <header class="mb-6">
+      <a href="/app/cuentas-paciente" class="inline-flex items-center gap-2 text-sm font-semibold text-brand-blue hover:underline">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Volver a cuentas-paciente
+      </a>
+      <div class="mt-3 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <div class="font-mono text-sm text-warning-500">{account.accountNumber}</div>
+          <h1 class="mt-1 font-heading text-2xl font-bold text-neutral-900 md:text-3xl">{account.patientName}</h1>
+          {account.patientIdentifier && <p class="font-mono text-xs text-neutral-500">{account.patientIdentifier}</p>}
+        </div>
+        <span class={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${st.cls}`}>{st.label}</span>
+      </div>
+    </header>
+
+    <section class="mb-6 grid gap-4 md:grid-cols-4">
+      <div class="rounded-2xl border border-neutral-200 bg-white p-4 shadow-card">
+        <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Cama</div>
+        <div class="mt-1 font-mono text-base font-bold text-neutral-900">{account.bedNumber ?? "—"}</div>
+      </div>
+      <div class="rounded-2xl border border-neutral-200 bg-white p-4 shadow-card">
+        <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Pagador</div>
+        <div class="mt-1 text-base font-bold text-neutral-900">{payerLabel[account.payerType]}</div>
+      </div>
+      <div class="rounded-2xl border border-neutral-200 bg-white p-4 shadow-card">
+        <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Ingresó</div>
+        <div class="mt-1 text-base font-bold text-neutral-900">{fmtDate(account.admittedAt)}</div>
+      </div>
+      <div class="rounded-2xl border border-neutral-200 bg-white p-4 shadow-card">
+        <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Alta</div>
+        <div class="mt-1 text-base font-bold text-neutral-900">{fmtDate(account.dischargedAt)}</div>
+      </div>
+    </section>
+
+    {account.notes && (
+      <div class="mb-6 rounded-2xl border border-neutral-200 bg-white p-4 text-sm text-neutral-700">
+        <span class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Notas</span>
+        <p class="mt-1">{account.notes}</p>
+      </div>
+    )}
+
+    {account.status === "closed" && account.saleId && (
+      <div class="mb-6 rounded-2xl border border-success-500 bg-success-50 p-4 text-sm">
+        <span class="font-semibold text-success-500">Cuenta cerrada. </span>
+        <a href={`/app/venta/ticket/${account.saleId}`} class="text-brand-blue underline">Ver factura H{account.saleId}</a>
+      </div>
+    )}
+
+    <PatientAccountDetail
+      client:load
+      accountId={account.id}
+      accountNumber={account.accountNumber}
+      status={account.status as any}
+      totalCharged={account.totalCharged}
+      initialItems={items}
+      warehouseId={account.warehouseId}
+    />
+  </div>
+</AppLayout>
