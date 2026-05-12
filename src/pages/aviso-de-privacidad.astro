@@ -1,0 +1,102 @@
+---
+import MarketingLayout from "../layouts/MarketingLayout.astro";
+const updated = "12 de mayo de 2025";
+---
+
+<MarketingLayout title="Aviso de privacidad" description="Aviso de privacidad integral de FarmaLat. LAATEC procesa tus datos conforme a la LFPDPPP.">
+  <article class="mx-auto max-w-3xl px-6 py-12 md:py-20">
+    <header class="mb-10">
+      <h1 class="font-heading text-3xl font-bold text-neutral-900 md:text-4xl">Aviso de privacidad integral</h1>
+      <p class="mt-2 text-sm text-neutral-500">Última actualización: {updated}</p>
+    </header>
+
+    <section class="prose prose-neutral max-w-none space-y-6 text-sm leading-relaxed text-neutral-700">
+      <h2 class="font-heading text-xl font-bold text-neutral-900">1. Identidad y domicilio del responsable</h2>
+      <p>
+        <strong>Laboratory and Technology S.A. de C.V.</strong> ("LAATEC"), con domicilio en Av. Topo Chico 590-2F, Anáhuac, 66457 San Nicolás de los Garza, Nuevo León, México, es el responsable del tratamiento de tus datos personales recabados a través de la plataforma <strong>FarmaLat</strong>, conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP) y su Reglamento.
+      </p>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">2. Datos personales que recabamos</h2>
+      <ul class="list-inside list-disc space-y-1">
+        <li><strong>De cuenta:</strong> nombre, correo electrónico, contraseña hash, teléfono.</li>
+        <li><strong>Fiscales de la farmacia:</strong> razón social, RFC, régimen fiscal, domicilio fiscal.</li>
+        <li><strong>De operación:</strong> productos, inventarios, ventas, tickets, recetas digitalizadas.</li>
+        <li><strong>De pacientes / clientes de tu farmacia:</strong> nombre, RFC, identificador médico, datos fiscales para CFDI.</li>
+        <li><strong>De uso del sistema:</strong> bitácora de acceso, dirección IP, navegador, eventos de auditoría.</li>
+      </ul>
+      <p>
+        No solicitamos datos personales sensibles del usuario directo. Las farmacias que usen FarmaLat son responsables de captar el consentimiento de sus pacientes para el almacenamiento de recetas digitalizadas dentro del sistema.
+      </p>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">3. Finalidades del tratamiento</h2>
+      <p class="font-semibold text-neutral-900">Finalidades primarias (necesarias):</p>
+      <ul class="list-inside list-disc space-y-1">
+        <li>Operar la plataforma FarmaLat y proveerte el servicio contratado.</li>
+        <li>Autenticarte, gestionar tu sesión y tus permisos dentro del sistema.</li>
+        <li>Emitir comprobantes fiscales (CFDI 4.0) por cuenta de tu farmacia.</li>
+        <li>Mantener el libro de control COFEPRIS y la bitácora de auditoría.</li>
+        <li>Facturarte el plan mensual y darte soporte técnico.</li>
+        <li>Cumplir obligaciones legales en materia fiscal, sanitaria y de farmacovigilancia aplicables.</li>
+      </ul>
+      <p class="mt-3 font-semibold text-neutral-900">Finalidades secundarias (opcionales):</p>
+      <ul class="list-inside list-disc space-y-1">
+        <li>Enviarte boletines de producto y mejoras.</li>
+        <li>Invitarte a participar en encuestas o entrevistas de usuario.</li>
+      </ul>
+      <p>Si no deseas que tus datos se usen para las finalidades secundarias, escríbenos a <a href="mailto:administracion@laatec.com" class="text-brand-blue hover:underline">administracion@laatec.com</a>.</p>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">4. Transferencias</h2>
+      <p>Transferimos datos personales únicamente a los siguientes terceros y solo en la medida estrictamente necesaria para operar el servicio:</p>
+      <ul class="list-inside list-disc space-y-1">
+        <li><strong>Cloudflare, Inc.</strong> (proveedor de infraestructura: hosting, base de datos D1, almacenamiento R2, KV de sesiones).</li>
+        <li><strong>Proveedor Autorizado de Certificación (PAC)</strong> cuando se active el timbrado real de CFDI (previo aviso a cada tenant).</li>
+        <li><strong>Autoridades fiscales, sanitarias y judiciales</strong> en cumplimiento de requerimientos legales.</li>
+      </ul>
+      <p>No vendemos ni cedemos datos personales a terceros con fines comerciales.</p>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">5. Derechos ARCO y revocación de consentimiento</h2>
+      <p>
+        Tienes derecho a <strong>acceder, rectificar, cancelar u oponerte</strong> al tratamiento de tus datos personales, así como revocar el consentimiento previamente otorgado. Para ejercer cualquiera de estos derechos envía un correo a <a href="mailto:administracion@laatec.com" class="text-brand-blue hover:underline">administracion@laatec.com</a> incluyendo:
+      </p>
+      <ul class="list-inside list-disc space-y-1">
+        <li>Nombre completo y correo registrado.</li>
+        <li>Descripción clara del derecho que deseas ejercer.</li>
+        <li>Documento oficial que acredite tu identidad.</li>
+      </ul>
+      <p>Responderemos en un plazo no mayor a 20 días hábiles conforme al artículo 32 de la LFPDPPP.</p>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">6. Medidas de seguridad</h2>
+      <p>
+        Aplicamos medidas administrativas, técnicas y físicas razonables: cifrado en tránsito (TLS 1.3), cifrado en reposo de las bases de datos, hash criptográfico de contraseñas (PBKDF2 100k iteraciones), sesiones con expiración, bitácora de auditoría inmutable y respaldos automáticos.
+      </p>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">7. Conservación de datos</h2>
+      <p>
+        Conservamos los datos mientras tengas cuenta activa y, tras la cancelación, por los plazos legales aplicables:
+      </p>
+      <ul class="list-inside list-disc space-y-1">
+        <li><strong>Recetas digitalizadas de medicamentos controlados:</strong> mínimo 5 años (alineado con plazo SAT de conservación de comprobantes).</li>
+        <li><strong>Comprobantes fiscales CFDI:</strong> 5 años conforme al Código Fiscal de la Federación.</li>
+        <li><strong>Datos de cuenta y operativos:</strong> 12 meses tras la cancelación, para fines de soporte y posible reactivación. Después se eliminan.</li>
+      </ul>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">8. Uso de cookies y tecnologías similares</h2>
+      <p>
+        Usamos cookies esenciales para mantener tu sesión (cookie httpOnly <code class="font-mono text-xs">fl_session</code>) y para recordar tu sucursal activa. No usamos cookies de publicidad ni de seguimiento de terceros.
+      </p>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">9. Cambios al aviso</h2>
+      <p>
+        Cualquier modificación a este aviso se publicará en esta misma página con la fecha de última actualización. Te recomendamos revisarla periódicamente.
+      </p>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">10. Contacto del responsable</h2>
+      <p>
+        Si tienes dudas sobre este aviso o sobre el tratamiento de tus datos, contáctanos:<br />
+        Correo: <a href="mailto:administracion@laatec.com" class="text-brand-blue hover:underline">administracion@laatec.com</a><br />
+        Teléfono: <a href="tel:+528118023213" class="text-brand-blue hover:underline">+52 81 1802 3213</a><br />
+        Domicilio: Av. Topo Chico 590-2F, Anáhuac, 66457 San Nicolás de los Garza, N.L.
+      </p>
+    </section>
+  </article>
+</MarketingLayout>

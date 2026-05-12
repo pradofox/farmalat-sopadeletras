@@ -26,7 +26,7 @@ const PROTECTED_API = [
   "/api/exports",
   "/api/receipts",
 ];
-const PUBLIC_ROUTES = ["/", "/login", "/signup", "/caracteristicas", "/hardware", "/faq", "/api/auth/login", "/api/auth/signup", "/api/auth/logout", "/api/seed"];
+const PUBLIC_ROUTES = ["/", "/login", "/signup", "/caracteristicas", "/hardware", "/faq", "/aviso-de-privacidad", "/terminos-y-condiciones", "/api/auth/login", "/api/auth/signup", "/api/auth/logout", "/api/seed"];
 const PUBLIC_PREFIXES = ["/f/", "/api/public/", "/brand/"];
 
 export const onRequest = defineMiddleware(async (context, next) => {

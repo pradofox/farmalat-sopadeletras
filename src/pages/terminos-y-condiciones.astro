@@ -1,0 +1,111 @@
+---
+import MarketingLayout from "../layouts/MarketingLayout.astro";
+const updated = "12 de mayo de 2025";
+---
+
+<MarketingLayout title="Términos y condiciones" description="Términos y condiciones de uso de FarmaLat.">
+  <article class="mx-auto max-w-3xl px-6 py-12 md:py-20">
+    <header class="mb-10">
+      <h1 class="font-heading text-3xl font-bold text-neutral-900 md:text-4xl">Términos y condiciones</h1>
+      <p class="mt-2 text-sm text-neutral-500">Última actualización: {updated}</p>
+    </header>
+
+    <section class="space-y-6 text-sm leading-relaxed text-neutral-700">
+      <h2 class="font-heading text-xl font-bold text-neutral-900">1. Aceptación</h2>
+      <p>
+        Estos Términos y Condiciones (en adelante "Términos") regulan el uso de la plataforma <strong>FarmaLat</strong>, propiedad de <strong>Laboratory and Technology S.A. de C.V.</strong> ("LAATEC"). Al crear una cuenta o usar el servicio aceptas estos Términos en su totalidad. Si no estás de acuerdo, no uses el servicio.
+      </p>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">2. Descripción del servicio</h2>
+      <p>
+        FarmaLat es un Software como Servicio (SaaS) basado en la nube que ofrece a farmacias mexicanas:
+        punto de venta, gestión de inventario y catálogo, control de medicamentos COFEPRIS, facturación electrónica CFDI 4.0,
+        cuentas-paciente para farmacia hospitalaria y reportes administrativos.
+      </p>
+      <p>
+        El servicio se ofrece "tal cual" con base en las funcionalidades publicadas y se mejora continuamente.
+      </p>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">3. Cuenta y credenciales</h2>
+      <ul class="list-inside list-disc space-y-1">
+        <li>Eres responsable de mantener la confidencialidad de tu contraseña.</li>
+        <li>Debes proporcionar datos de la farmacia exactos y vigentes (razón social, RFC, etc.).</li>
+        <li>Los administradores son responsables de los usuarios que invitan al tenant.</li>
+        <li>Nos reservamos el derecho de suspender cuentas con uso fraudulento, ilegal o que afecte a otros tenants.</li>
+      </ul>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">4. Plan, pagos y prueba gratuita</h2>
+      <ul class="list-inside list-disc space-y-1">
+        <li>Los planes y precios vigentes se publican en <a href="/#pricing" class="text-brand-blue hover:underline">farmalat.sopadeletras.art</a>.</li>
+        <li>La prueba gratuita es de 30 días naturales sin tarjeta. Al finalizar puedes contratar un plan o exportar tus datos.</li>
+        <li>La facturación es mensual prepagada. Si no se realiza el pago, el servicio se suspende; tras 30 días adicionales se considerará cancelado.</li>
+        <li>Los timbres CFDI se cobran por separado al costo del PAC más un margen administrativo.</li>
+      </ul>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">5. Propiedad de los datos</h2>
+      <p>
+        <strong>Los datos cargados por el cliente (catálogo, ventas, clientes, recetas, pacientes) son propiedad del cliente.</strong>
+        LAATEC actúa como encargado de tratamiento y no comercializa estos datos.
+      </p>
+      <p>
+        En cualquier momento puedes solicitar la exportación de tus datos en formato XLSX. Tras cancelar, mantenemos tus datos
+        por 12 meses por si decides reactivar la cuenta; luego se eliminan conforme al Aviso de Privacidad.
+      </p>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">6. Disponibilidad del servicio</h2>
+      <p>
+        Operamos sobre infraestructura Cloudflare con alta disponibilidad. Buscamos un uptime mensual ≥ 99.5%, sin garantía contractual de SLA durante la fase MVP. Las ventanas de mantenimiento se anuncian con al menos 24 horas de anticipación.
+      </p>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">7. Limitación de responsabilidad</h2>
+      <p>
+        LAATEC no será responsable de:
+      </p>
+      <ul class="list-inside list-disc space-y-1">
+        <li>Cumplimiento fiscal del cliente con el SAT (es responsabilidad del cliente verificar correctez de RFC, régimen, uso CFDI, etc.).</li>
+        <li>Cumplimiento sanitario del cliente con COFEPRIS (el sistema te ayuda a documentar; la responsabilidad ante autoridades es del titular del establecimiento).</li>
+        <li>Pérdida indirecta de ingresos por interrupciones del servicio, fallas de internet del cliente o de Cloudflare.</li>
+        <li>Daños derivados del uso de hardware no certificado.</li>
+      </ul>
+      <p>
+        La responsabilidad máxima de LAATEC ante el cliente se limita al monto pagado por el cliente en los últimos 3 meses.
+      </p>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">8. Uso aceptable</h2>
+      <p>El cliente se compromete a no:</p>
+      <ul class="list-inside list-disc space-y-1">
+        <li>Usar la plataforma para fines ilegales o que violen normativa fiscal o sanitaria mexicana.</li>
+        <li>Vender o redistribuir el acceso a la plataforma sin autorización escrita.</li>
+        <li>Intentar acceder a otros tenants, datos o sistemas de LAATEC.</li>
+        <li>Realizar pruebas de seguridad o ingeniería inversa sin autorización.</li>
+      </ul>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">9. Cancelación</h2>
+      <ul class="list-inside list-disc space-y-1">
+        <li>Puedes cancelar en cualquier momento desde <a href="/app/configuracion" class="text-brand-blue hover:underline">Configuración</a> o escribiendo a administracion@laatec.com.</li>
+        <li>No hay penalizaciones por cancelación.</li>
+        <li>Los pagos del mes corriente no son reembolsables.</li>
+        <li>Tras la cancelación tienes 30 días para exportar tus datos antes de que iniciemos el periodo de retención de 12 meses.</li>
+      </ul>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">10. Modificaciones</h2>
+      <p>
+        Podemos modificar estos Términos previo aviso por correo electrónico con al menos 15 días de anticipación. Si no estás de acuerdo con los cambios, puedes cancelar dentro de ese plazo sin penalizaciones.
+      </p>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">11. Ley aplicable y jurisdicción</h2>
+      <p>
+        Estos Términos se rigen por las leyes mexicanas. Para cualquier controversia, las partes se someten a la jurisdicción
+        de los tribunales competentes en <strong>Monterrey, Nuevo León</strong>, renunciando expresamente a cualquier otro fuero que pudiera corresponderles.
+      </p>
+
+      <h2 class="font-heading text-xl font-bold text-neutral-900">12. Contacto</h2>
+      <p>
+        Dudas, quejas o asuntos legales:<br />
+        Correo: <a href="mailto:administracion@laatec.com" class="text-brand-blue hover:underline">administracion@laatec.com</a><br />
+        Teléfono: <a href="tel:+528118023213" class="text-brand-blue hover:underline">+52 81 1802 3213</a><br />
+        Domicilio: Av. Topo Chico 590-2F, Anáhuac, 66457 San Nicolás de los Garza, N.L.
+      </p>
+    </section>
+  </article>
+</MarketingLayout>
