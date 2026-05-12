@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import CommandPalette from "../components/CommandPalette";
 import { getDb, schema } from "../lib/db";
 import { eq } from "drizzle-orm";
 
@@ -106,6 +107,11 @@ const icons: Record<string, string> = {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#080451" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="FarmaLat" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -224,20 +230,15 @@ const icons: Record<string, string> = {
           </button>
 
           <div class="flex-1">
-            <div class="relative max-w-md">
-              <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="7"/>
-                <path d="M21 21l-4-4"/>
-              </svg>
-              <input
-                type="search"
-                placeholder="Buscar..."
-                class="w-full rounded-lg border border-neutral-200 bg-neutral-50 py-2 pl-10 pr-3 text-sm placeholder:text-neutral-400 focus:border-blue-300 focus:bg-white focus:outline-none"
-              />
-              <kbd class="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border border-neutral-200 bg-white px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 md:block">
-                ⌘K
-              </kbd>
-            </div>
+            <button
+              type="button"
+              id="open-palette"
+              class="relative flex w-full max-w-md items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-left text-sm text-neutral-400 transition hover:border-blue-300 hover:bg-white"
+            >
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+              <span>Buscar productos, ventas, clientes...</span>
+              <kbd class="ml-auto hidden rounded border border-neutral-200 bg-white px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 md:block">⌘K</kbd>
+            </button>
           </div>
           <div class="flex items-center gap-2">
             {warehouses.length > 1 ? (
@@ -269,6 +270,8 @@ const icons: Record<string, string> = {
           <slot />
         </main>
       </div>
+
+      <CommandPalette client:load />
     </div>
 
     <script>
@@ -305,6 +308,11 @@ const icons: Record<string, string> = {
         const id = e.target.value;
         document.cookie = `fl_warehouse=${id}; Path=/; Max-Age=2592000; SameSite=Lax`;
         window.location.reload();
+      });
+
+      // Open palette
+      document.getElementById("open-palette")?.addEventListener("click", () => {
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }));
       });
     </script>
   </body>

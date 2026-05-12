@@ -11,6 +11,20 @@ const PROTECTED_API = [
   "/api/products",
   "/api/products/search",
   "/api/products/import",
+  "/api/suppliers",
+  "/api/supplier-orders",
+  "/api/transfers",
+  "/api/inventory",
+  "/api/patients",
+  "/api/patient-accounts",
+  "/api/prescriptions",
+  "/api/tenant",
+  "/api/warehouses",
+  "/api/users",
+  "/api/auth/change-password",
+  "/api/search",
+  "/api/exports",
+  "/api/receipts",
 ];
 const PUBLIC_ROUTES = ["/login", "/signup", "/api/auth/login", "/api/auth/signup", "/api/auth/logout", "/api/seed"];
 

@@ -1,0 +1,30 @@
+{
+  "name": "FarmaLat",
+  "short_name": "FarmaLat",
+  "description": "Sistema de punto de venta para farmacias mexicanas",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FAFAFB",
+  "theme_color": "#10069F",
+  "orientation": "portrait-primary",
+  "lang": "es-MX",
+  "icons": [
+    { "src": "/brand/farmalat-isotipo-blue.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nueva venta",
+      "short_name": "Venta",
+      "url": "/app/venta",
+      "icons": [{ "src": "/brand/farmalat-isotipo-blue.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Cotización",
+      "url": "/app/cotizacion",
+      "icons": [{ "src": "/brand/farmalat-isotipo-blue.svg", "sizes": "any" }]
+    }
+  ]
+}
