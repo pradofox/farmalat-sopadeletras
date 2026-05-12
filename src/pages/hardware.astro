@@ -1,0 +1,106 @@
+---
+import MarketingLayout from "../layouts/MarketingLayout.astro";
+
+const printers = [
+  { brand: "Epson", model: "TM-T20III", desc: "USB, 80mm, ESC/POS + driver Windows estándar.", price: "$3,800-$5,000 MXN" },
+  { brand: "Epson", model: "TM-m30II", desc: "USB + Ethernet + Bluetooth, ePOS-Print desde browser.", price: "$5,500-$7,000 MXN" },
+  { brand: "Star", model: "TSP143IIIU", desc: "USB. WebPRNT en versiones LAN.", price: "$3,500-$4,800 MXN" },
+  { brand: "3nStar", model: "RPT008", desc: "Opción económica, ESC/POS y driver Windows.", price: "$2,200-$2,800 MXN" },
+];
+
+const scanners = [
+  { brand: "Honeywell", model: "Voyager 1250g", desc: "HID-keyboard, 1D, plug-and-play.", price: "$1,200-$1,800 MXN" },
+  { brand: "Zebra (Symbol)", model: "LS2208", desc: "Estándar del mercado mexicano. 1D.", price: "$1,100-$1,700 MXN" },
+  { brand: "Datalogic", model: "QuickScan QD2430", desc: "2D para QR y código de barras COFEPRIS.", price: "$2,000-$2,800 MXN" },
+];
+
+const drawers = [
+  { brand: "APG", model: "Vasario VB320", desc: "Cajón con RJ-12 que abre desde la impresora.", price: "$1,200-$1,800 MXN" },
+  { brand: "EC Line", model: "EC-410", desc: "Económico, RJ-11.", price: "$800-$1,200 MXN" },
+];
+---
+
+<MarketingLayout title="Hardware compatible" description="Impresoras, escáneres y cajones monederos certificados para FarmaLat.">
+  <section class="bg-gradient-to-br from-blue-700 via-blue-800 to-blue-900 py-16 text-white">
+    <div class="mx-auto max-w-4xl px-6">
+      <p class="mb-3 text-sm font-semibold uppercase tracking-wider text-brand-orange-light">Hardware</p>
+      <h1 class="font-heading text-4xl font-extrabold leading-tight md:text-5xl">
+        Funciona con el hardware que ya tienes.
+      </h1>
+      <p class="mt-4 max-w-2xl text-lg text-white/80">
+        Impresora térmica USB, escáner de barras y cajón monedero. Todo lo que ya hay en una farmacia mexicana es compatible.
+      </p>
+    </div>
+  </section>
+
+  <section class="bg-white py-16">
+    <div class="mx-auto max-w-5xl px-6">
+      <article class="mb-12">
+        <h2 class="font-heading text-2xl font-bold text-neutral-900">Impresoras térmicas 80mm</h2>
+        <p class="mt-2 text-sm text-neutral-600">FarmaLat imprime tickets directo desde el navegador con CSS print. No requiere driver propietario.</p>
+        <div class="mt-6 grid gap-4 md:grid-cols-2">
+          {printers.map((p) => (
+            <div class="rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
+              <div class="text-xs font-semibold uppercase tracking-wider text-brand-blue">{p.brand}</div>
+              <div class="mt-1 font-heading text-base font-bold text-neutral-900">{p.model}</div>
+              <p class="mt-2 text-sm text-neutral-600">{p.desc}</p>
+              <div class="mt-3 font-mono text-xs text-neutral-500">{p.price}</div>
+            </div>
+          ))}
+        </div>
+      </article>
+
+      <article class="mb-12">
+        <h2 class="font-heading text-2xl font-bold text-neutral-900">Escáneres de código de barras</h2>
+        <p class="mt-2 text-sm text-neutral-600">Plug-and-play USB. El POS los detecta como teclado, sin configuración.</p>
+        <div class="mt-6 grid gap-4 md:grid-cols-3">
+          {scanners.map((s) => (
+            <div class="rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
+              <div class="text-xs font-semibold uppercase tracking-wider text-brand-blue">{s.brand}</div>
+              <div class="mt-1 font-heading text-base font-bold text-neutral-900">{s.model}</div>
+              <p class="mt-2 text-sm text-neutral-600">{s.desc}</p>
+              <div class="mt-3 font-mono text-xs text-neutral-500">{s.price}</div>
+            </div>
+          ))}
+        </div>
+      </article>
+
+      <article>
+        <h2 class="font-heading text-2xl font-bold text-neutral-900">Cajones monederos</h2>
+        <p class="mt-2 text-sm text-neutral-600">Conectados por RJ-11 a la impresora térmica. Apertura automática al cobrar (con agente nativo, próxima versión).</p>
+        <div class="mt-6 grid gap-4 md:grid-cols-2">
+          {drawers.map((d) => (
+            <div class="rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
+              <div class="text-xs font-semibold uppercase tracking-wider text-brand-blue">{d.brand}</div>
+              <div class="mt-1 font-heading text-base font-bold text-neutral-900">{d.model}</div>
+              <p class="mt-2 text-sm text-neutral-600">{d.desc}</p>
+              <div class="mt-3 font-mono text-xs text-neutral-500">{d.price}</div>
+            </div>
+          ))}
+        </div>
+      </article>
+
+      <div class="mt-12 rounded-2xl border border-blue-200 bg-blue-50 p-6 text-sm">
+        <h3 class="font-heading text-base font-bold text-brand-blue">Terminal de cobro con tarjeta</h3>
+        <p class="mt-2 text-neutral-700">
+          FarmaLat te permite registrar pagos con tarjeta de forma manual (cajero teclea monto en la terminal Clip / Mercado Pago Point y captura el cobro en el sistema).
+          La integración API con Clip llega en Fase 2.
+        </p>
+      </div>
+
+      <p class="mt-8 text-xs text-neutral-400">
+        Precios referenciales del mercado mexicano. Pueden variar por distribuidor. Validar con cotización fresca antes de comprar.
+      </p>
+    </div>
+  </section>
+
+  <section class="bg-neutral-50 py-12">
+    <div class="mx-auto max-w-4xl px-6 text-center">
+      <h2 class="font-heading text-2xl font-bold text-neutral-900">¿Ya tienes hardware?</h2>
+      <p class="mx-auto mt-2 max-w-2xl text-sm text-neutral-600">
+        Si vienes de otro POS de farmacia, lo más probable es que tu hardware sea compatible. Te ayudamos a probarlo en la llamada de onboarding.
+      </p>
+      <a href="/signup" class="mt-6 inline-block rounded-xl bg-brand-blue px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-blue-800">Crear cuenta y probar</a>
+    </div>
+  </section>
+</MarketingLayout>

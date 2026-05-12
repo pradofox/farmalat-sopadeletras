@@ -1,0 +1,81 @@
+---
+import "../styles/global.css";
+
+interface Props { title?: string; description?: string }
+const {
+  title = "FarmaLat",
+  description = "POS para farmacias mexicanas con CFDI 4.0, COFEPRIS y cuentas-paciente. Hecho en México por LAATEC.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es-MX">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#10069F" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+    <title>{title} · FarmaLat</title>
+  </head>
+  <body class="min-h-screen bg-neutral-50 text-neutral-900 antialiased">
+    <header class="border-b border-neutral-200 bg-white">
+      <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        <a href="/" class="flex items-center gap-3">
+          <img src="/brand/farmalat-lockup-blue.svg" alt="FarmaLat" class="h-8" />
+        </a>
+        <nav class="hidden items-center gap-6 text-sm font-medium text-neutral-700 md:flex">
+          <a href="/caracteristicas" class="hover:text-brand-blue">Funciones</a>
+          <a href="/hardware" class="hover:text-brand-blue">Hardware</a>
+          <a href="/faq" class="hover:text-brand-blue">Preguntas frecuentes</a>
+          <a href="/#pricing" class="hover:text-brand-blue">Precios</a>
+          <a href="/login" class="hover:text-brand-blue">Iniciar sesión</a>
+          <a href="/signup" class="rounded-lg bg-orange-500 px-4 py-2 font-semibold text-white shadow-sm transition hover:bg-orange-600">Crear cuenta gratis</a>
+        </nav>
+        <a href="/signup" class="rounded-lg bg-orange-500 px-3 py-1.5 text-sm font-semibold text-white md:hidden">Empezar</a>
+      </div>
+    </header>
+
+    <main><slot /></main>
+
+    <footer class="bg-neutral-900 py-12 text-sm text-neutral-400">
+      <div class="mx-auto grid max-w-7xl gap-10 px-6 md:grid-cols-4">
+        <div class="md:col-span-2">
+          <div class="flex items-center gap-3">
+            <img src="/brand/farmalat-isotipo-white.svg" alt="" class="h-10 w-10" />
+            <div>
+              <div class="font-heading text-base font-bold text-white">FarmaLat</div>
+              <div>Un sistema de <a href="https://laatec.com" class="text-brand-blue-light hover:text-white">Laboratory & Technology</a></div>
+            </div>
+          </div>
+          <p class="mt-4 max-w-sm">
+            POS web hecho en México para farmacias chicas y medianas. CFDI 4.0, libro COFEPRIS y cuentas-paciente en un solo lugar.
+          </p>
+        </div>
+        <div>
+          <h4 class="mb-3 font-heading font-bold text-white">Producto</h4>
+          <ul class="space-y-1">
+            <li><a href="/caracteristicas" class="hover:text-white">Funciones</a></li>
+            <li><a href="/hardware" class="hover:text-white">Hardware</a></li>
+            <li><a href="/#pricing" class="hover:text-white">Precios</a></li>
+            <li><a href="/faq" class="hover:text-white">FAQ</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="mb-3 font-heading font-bold text-white">Contacto</h4>
+          <ul class="space-y-1">
+            <li><a href="mailto:administracion@laatec.com" class="hover:text-white">administracion@laatec.com</a></li>
+            <li><a href="tel:+528118023213" class="hover:text-white">+52 81 1802 3213</a></li>
+            <li class="mt-2 text-xs">Av. Topo Chico 590-2F<br />San Nicolás de los Garza, N.L.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mx-auto mt-10 max-w-7xl border-t border-neutral-800 px-6 pt-6 text-xs text-neutral-500">
+        © 2025 Laboratory and Technology S.A. de C.V. Todos los derechos reservados.
+      </div>
+    </footer>
+  </body>
+</html>

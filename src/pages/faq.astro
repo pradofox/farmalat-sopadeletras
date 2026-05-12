@@ -1,0 +1,87 @@
+---
+import MarketingLayout from "../layouts/MarketingLayout.astro";
+
+const groups = [
+  {
+    title: "Lo básico",
+    items: [
+      { q: "¿Necesito instalar algo?", a: "No. FarmaLat corre 100% en el navegador (Chrome, Edge, Safari, Firefox). Se actualiza solo. Puedes instalarlo como app en tu computadora o tablet para abrirlo más rápido (PWA)." },
+      { q: "¿Funciona en mi internet?", a: "Sí. FarmaLat funciona con cualquier conexión a internet estable. Pronto activamos modo offline para que el POS siga funcionando si se cae la conexión temporalmente." },
+      { q: "¿Cuántas cajas puedo tener?", a: "Ilimitadas, en todos los planes. Cada caja es solo un navegador más abierto sesionado con un usuario distinto. Sin licencias por terminal." },
+      { q: "¿Puedo migrar desde mi sistema actual?", a: "Sí. Si tu sistema te deja exportar el catálogo a Excel o CSV, lo importas en /app/productos/importar. Detectamos columnas automáticamente." },
+    ],
+  },
+  {
+    title: "Facturación",
+    items: [
+      { q: "¿FarmaLat emite CFDI 4.0?", a: "Sí. Tu cliente puede autofacturar entrando a farmalat.sopadeletras.art/f/{tu-farmacia}/{folio} con el folio impreso en su ticket. La integración con PAC autorizado (Facturapi) llega en Fase 2." },
+      { q: "¿Cuesta extra el timbrado?", a: "Sí, los timbres CFDI se cobran al costo del PAC + un pequeño margen administrativo. Calcula $1.00 MXN por timbre. Tu plan mensual de FarmaLat NO los incluye." },
+      { q: "¿Puedo hacer factura global?", a: "Sí. Al cierre de cada día puedes generar una factura global a XAXX010101000 con todos los tickets no facturados. Esto es lo que hacen las cadenas grandes." },
+      { q: "¿Y la receta digital?", a: "Captura del paciente, médico y foto de receta para productos controlados. Estás listo para verificación COFEPRIS. La integración con receta electrónica nacional llega cuando el SAT/SSA la formalicen." },
+    ],
+  },
+  {
+    title: "COFEPRIS y regulación",
+    items: [
+      { q: "¿FarmaLat me ayuda con el libro de control?", a: "Sí. Cada movimiento de un producto controlado (Grupo I-IV) registra automáticamente saldo, lote y caducidad. Generas el reporte PDF en cualquier momento desde /app/reportes/cofepris." },
+      { q: "¿Retiene recetas Grupo II?", a: "Sí. El sistema te obliga a capturar paciente y foto de receta cuando vendes Grupo II. La receta se archiva 5 años en Cloudflare R2 (cifrado, accesible solo por tu farmacia)." },
+      { q: "¿Cubre la NOM-220 de farmacovigilancia?", a: "Capturamos titular del registro y lote por entrada. Si COFEPRIS publica la NOM-220 actualizada (PROY 2024) en su versión vigente, agregamos los campos faltantes sin costo." },
+    ],
+  },
+  {
+    title: "Hospital y multi-almacén",
+    items: [
+      { q: "¿Puedo usarlo en farmacia hospitalaria?", a: "Sí. El plan Hospitalaria incluye cuentas-paciente: abres una cuenta al ingreso del paciente, agregas sus consumos durante la estancia, y al alta generas la factura para cobrar al particular, aseguradora o IMSS." },
+      { q: "¿Cuántas sucursales?", a: "Single: 1. Multi: hasta 3. Hospitalaria: ilimitadas. Cada sucursal tiene su propio inventario, líneas de ticket y folio de venta." },
+      { q: "¿Cómo funcionan los traslados?", a: "Vas a /app/transferencias, eliges almacén origen y destino, agregas productos y confirmas. El sistema valida stock y dispara dos movimientos en el libro de control automáticamente." },
+    ],
+  },
+  {
+    title: "Precios y compromiso",
+    items: [
+      { q: "¿Tengo que firmar contrato anual?", a: "No. FarmaLat es mes a mes. Cancelas cuando quieras y te exportamos tus datos en Excel sin restricciones." },
+      { q: "¿Hay costo de implementación?", a: "No. Si necesitas ayuda para migrar el catálogo, te apoyamos en una llamada (incluido en cualquier plan)." },
+      { q: "¿Cómo se cobra?", a: "Mensualmente por sucursal. Tarjeta de crédito o transferencia. Si eres una cadena grande con varias sucursales, hablamos de pricing custom." },
+    ],
+  },
+];
+---
+
+<MarketingLayout title="Preguntas frecuentes" description="Respuestas sobre FarmaLat: precios, CFDI, COFEPRIS, hardware y soporte.">
+  <section class="bg-gradient-to-br from-blue-700 via-blue-800 to-blue-900 py-16 text-white">
+    <div class="mx-auto max-w-4xl px-6">
+      <p class="mb-3 text-sm font-semibold uppercase tracking-wider text-brand-orange-light">FAQ</p>
+      <h1 class="font-heading text-4xl font-extrabold leading-tight md:text-5xl">Preguntas frecuentes</h1>
+      <p class="mt-4 max-w-2xl text-lg text-white/80">Si tu duda no está aquí, escríbenos a administracion@laatec.com.</p>
+    </div>
+  </section>
+
+  <section class="bg-white py-16">
+    <div class="mx-auto max-w-3xl px-6">
+      {groups.map((g) => (
+        <div class="mb-10">
+          <h2 class="mb-4 font-heading text-2xl font-bold text-neutral-900">{g.title}</h2>
+          <div class="space-y-3">
+            {g.items.map((it) => (
+              <details class="group rounded-2xl border border-neutral-200 bg-neutral-50 transition open:bg-white open:shadow-card">
+                <summary class="flex cursor-pointer items-center justify-between gap-3 px-5 py-4 text-base font-semibold text-neutral-900">
+                  <span>{it.q}</span>
+                  <svg class="h-5 w-5 flex-none transition group-open:rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round" /></svg>
+                </summary>
+                <div class="border-t border-neutral-100 px-5 py-4 text-sm leading-relaxed text-neutral-700">{it.a}</div>
+              </details>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="bg-brand-blue py-16 text-white">
+    <div class="mx-auto max-w-4xl px-6 text-center">
+      <h2 class="font-heading text-3xl font-bold md:text-5xl">¿Lista para empezar?</h2>
+      <p class="mx-auto mt-4 max-w-xl text-lg text-white/80">30 días gratis sin tarjeta. Cancelas cuando quieras.</p>
+      <a href="/signup" class="mt-8 inline-block rounded-xl bg-orange-500 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-orange-600">Crear cuenta gratis</a>
+    </div>
+  </section>
+</MarketingLayout>

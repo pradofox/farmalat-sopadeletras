@@ -1,0 +1,146 @@
+---
+import MarketingLayout from "../layouts/MarketingLayout.astro";
+
+const sections = [
+  {
+    title: "Punto de venta",
+    desc: "Cobro rápido pensado en mostrador.",
+    features: [
+      "Escaneo de código de barras con autofocus permanente",
+      "Búsqueda en vivo por nombre o código",
+      "Atajos de teclado (F12 cobrar, Esc cancelar)",
+      "Modal de cobro con efectivo, débito, crédito, transferencia",
+      "Cálculo automático de cambio",
+      "Captura de receta para productos controlados",
+      "Foto de receta opcional (camara del celular)",
+      "Ticket imprimible 80mm con folio y QR de autofactura",
+    ],
+  },
+  {
+    title: "Inventario multi-almacén",
+    desc: "Una sola plataforma para varias sucursales.",
+    features: [
+      "Existencia por sucursal en tiempo real",
+      "Ajustes manuales con motivo y bitácora",
+      "Traslados entre sucursales con validación de stock",
+      "Mínimos y máximos por producto",
+      "Alertas de stock crítico en dashboard",
+      "Lotes y caducidad por entrada de compra",
+      "Reporte de productos por caducar (30/60/90 días)",
+      "Valor de inventario a costo por departamento",
+    ],
+  },
+  {
+    title: "Órdenes a proveedor",
+    desc: "Reabastecimiento sin Excel ni WhatsApp.",
+    features: [
+      "Alta de proveedores (Casa Saba, Nadro, Marzam, los que tengas)",
+      "Builder de orden con buscador y editor inline",
+      "Folio automático OC YYMM-NNNNN",
+      "Envío de orden por email al proveedor",
+      "Recepción dispara entrada al inventario con costo y lote",
+      "Estado de orden: borrador / enviada / recibida",
+    ],
+  },
+  {
+    title: "Facturación CFDI 4.0",
+    desc: "Factura desde el primer ticket.",
+    features: [
+      "Generación de CFDI 4.0 con catálogos SAT bake-in",
+      "Régimen fiscal, uso CFDI y forma de pago según SAT",
+      "Portal de autofactura: tu cliente captura sus datos con folio",
+      "Plazo configurable de 30 días",
+      "Catálogo de clientes recurrentes con RFC validado",
+      "Próximamente: integración con Facturapi para timbrado real",
+    ],
+  },
+  {
+    title: "Libro COFEPRIS",
+    desc: "El reporte que ningún competidor te da listo.",
+    features: [
+      "Clasificación Art. 226 LGS por producto (I, II, III, IV, V)",
+      "Balance materializado en cada movimiento",
+      "Retención de receta para Grupo II",
+      "Refills tracking para Grupo III",
+      "Reporte imprimible con header oficial del establecimiento",
+      "Filtros por grupo y rango de fechas",
+    ],
+  },
+  {
+    title: "Farmacia hospitalaria",
+    desc: "Cuentas-paciente para clínicas y hospitales pequeños.",
+    features: [
+      "Alta de paciente con expediente o CURP",
+      "Cuenta abierta por hospitalización con tipo de pagador",
+      "Cargo de productos en vivo durante la estancia",
+      "Cierre al alta genera factura unificada con folio H",
+      "Cama, médico tratante y notas por cuenta",
+      "Diferenciador real vs todos los competidores del segmento",
+    ],
+  },
+  {
+    title: "Médicos y comisiones",
+    desc: "Paga comisiones sin Excel.",
+    features: [
+      "Catálogo de médicos con cédula y especialidad",
+      "% de comisión configurable por producto",
+      "Cálculo automático al surtir receta",
+      "Reporte mensual por médico con detalle",
+      "Exportable a Excel",
+    ],
+  },
+  {
+    title: "Búsqueda global y productividad",
+    desc: "Cmd+K en cualquier pantalla.",
+    features: [
+      "Omnibox que busca productos, ventas, clientes y pacientes",
+      "Navegación con flechas + Enter",
+      "Selector rápido de almacén activo",
+      "PWA instalable en móvil y desktop",
+      "Acceso offline al catálogo (próximamente)",
+    ],
+  },
+];
+---
+
+<MarketingLayout title="Funciones" description="Todas las funciones de FarmaLat para farmacias mexicanas.">
+  <section class="bg-gradient-to-br from-blue-700 via-blue-800 to-blue-900 py-20 text-white">
+    <div class="mx-auto max-w-4xl px-6 text-center">
+      <p class="mb-3 text-sm font-semibold uppercase tracking-wider text-brand-orange-light">Funciones</p>
+      <h1 class="font-heading text-4xl font-extrabold leading-tight md:text-6xl">
+        Todo lo que tu farmacia<br />necesita en un solo sistema.
+      </h1>
+      <p class="mx-auto mt-6 max-w-2xl text-lg text-white/80">
+        POS, inventario, CFDI, COFEPRIS, hospital y comisiones. Sin instalar nada. Web puro.
+      </p>
+    </div>
+  </section>
+
+  <section class="bg-white py-16">
+    <div class="mx-auto max-w-6xl px-6">
+      <div class="grid gap-6 md:grid-cols-2">
+        {sections.map((s) => (
+          <article class="rounded-2xl border border-neutral-200 bg-neutral-50 p-7 transition hover:border-blue-300 hover:bg-blue-50/40">
+            <h2 class="font-heading text-xl font-bold text-brand-blue">{s.title}</h2>
+            <p class="mt-1 text-sm text-neutral-600">{s.desc}</p>
+            <ul class="mt-5 space-y-2 text-sm text-neutral-700">
+              {s.features.map((f) => (
+                <li class="flex gap-2">
+                  <span class="mt-0.5 text-success-500">✓</span><span>{f}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-brand-blue py-16 text-white">
+    <div class="mx-auto max-w-4xl px-6 text-center">
+      <h2 class="font-heading text-3xl font-bold md:text-5xl">Pruébalo gratis 30 días.</h2>
+      <p class="mx-auto mt-4 max-w-xl text-lg text-white/80">Sin tarjeta. Sin compromiso. Si no te late, te exportamos tus datos y te despides.</p>
+      <a href="/signup" class="mt-8 inline-block rounded-xl bg-orange-500 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-orange-600">Crear cuenta gratis</a>
+    </div>
+  </section>
+</MarketingLayout>
