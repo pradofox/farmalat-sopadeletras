@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "50580610-a0c5-4eab-b21e-559c7740353f",
+  "id": "d7c7a8ae-8c67-4ac7-ac93-28cfbfda94b0",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audit_log": {
@@ -63,8 +63,8 @@
           "notNull": false,
           "autoincrement": false
         },
-        "timestamp": {
-          "name": "timestamp",
+        "created_at": {
+          "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -76,7 +76,7 @@
           "name": "audit_tenant_date_idx",
           "columns": [
             "tenant_id",
-            "timestamp"
+            "created_at"
           ],
           "isUnique": false
         }
@@ -186,8 +186,8 @@
           "notNull": false,
           "autoincrement": false
         },
-        "timestamp": {
-          "name": "timestamp",
+        "created_at": {
+          "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -254,8 +254,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "timestamp": {
-          "name": "timestamp",
+        "created_at": {
+          "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -359,8 +359,8 @@
           "autoincrement": false,
           "default": true
         },
-        "timestamp": {
-          "name": "timestamp",
+        "created_at": {
+          "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -466,8 +466,8 @@
           "autoincrement": false,
           "default": 0
         },
-        "timestamp": {
-          "name": "timestamp",
+        "updated_at": {
+          "name": "updated_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -644,8 +644,8 @@
           "notNull": false,
           "autoincrement": false
         },
-        "timestamp": {
-          "name": "timestamp",
+        "created_at": {
+          "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -659,7 +659,7 @@
             "tenant_id",
             "warehouse_id",
             "controlled_group",
-            "timestamp"
+            "created_at"
           ],
           "isUnique": false
         },
@@ -667,7 +667,7 @@
           "name": "movs_product_idx",
           "columns": [
             "product_id",
-            "timestamp"
+            "created_at"
           ],
           "isUnique": false
         }
@@ -807,8 +807,8 @@
           "notNull": false,
           "autoincrement": false
         },
-        "timestamp": {
-          "name": "timestamp",
+        "created_at": {
+          "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -934,8 +934,15 @@
           "notNull": false,
           "autoincrement": false
         },
-        "timestamp": {
-          "name": "timestamp",
+        "issued_at": {
+          "name": "issued_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -1041,11 +1048,11 @@
           "notNull": true,
           "autoincrement": false
         },
-        "timestamp": {
-          "name": "timestamp",
+        "expiry_date": {
+          "name": "expiry_date",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "qty_on_hand": {
@@ -1063,6 +1070,13 @@
           "notNull": true,
           "autoincrement": false,
           "default": 0
+        },
+        "received_at": {
+          "name": "received_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
       "indexes": {
@@ -1078,7 +1092,7 @@
           "name": "lots_expiry_idx",
           "columns": [
             "tenant_id",
-            "timestamp"
+            "expiry_date"
           ],
           "isUnique": false
         }
@@ -1341,8 +1355,15 @@
           "autoincrement": false,
           "default": true
         },
-        "timestamp": {
-          "name": "timestamp",
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -1633,11 +1654,11 @@
           "notNull": false,
           "autoincrement": false
         },
-        "timestamp": {
-          "name": "timestamp",
+        "cancelled_at": {
+          "name": "cancelled_at",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "cfdi_uuid": {
@@ -1654,6 +1675,13 @@
           "notNull": true,
           "autoincrement": false,
           "default": "'none'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
       "indexes": {
@@ -1661,7 +1689,7 @@
           "name": "sales_tenant_date_idx",
           "columns": [
             "tenant_id",
-            "timestamp"
+            "created_at"
           ],
           "isUnique": false
         },
@@ -1813,8 +1841,15 @@
           "autoincrement": false,
           "default": "'trial'"
         },
-        "timestamp": {
-          "name": "timestamp",
+        "trial_ends_at": {
+          "name": "trial_ends_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -1957,8 +1992,8 @@
           "autoincrement": false,
           "default": true
         },
-        "timestamp": {
-          "name": "timestamp",
+        "created_at": {
+          "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -2062,8 +2097,8 @@
           "autoincrement": false,
           "default": true
         },
-        "timestamp": {
-          "name": "timestamp",
+        "created_at": {
+          "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,

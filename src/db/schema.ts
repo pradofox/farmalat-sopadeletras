@@ -5,7 +5,7 @@
  */
 import { sqliteTable, text, integer, real, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 
-const ts = () => integer("timestamp", { mode: "timestamp_ms" });
+const ts = (name: string) => integer(name, { mode: "timestamp_ms" });
 const id = () => integer("id", { mode: "number" }).primaryKey({ autoIncrement: true });
 
 // ============================================================
@@ -20,8 +20,8 @@ export const tenants = sqliteTable("tenants", {
   email: text("email").notNull(),
   phone: text("phone"),
   status: text("status", { enum: ["trial", "active", "paused", "cancelled"] }).notNull().default("trial"),
-  trialEndsAt: ts(),
-  createdAt: ts().notNull().$defaultFn(() => new Date()),
+  trialEndsAt: ts("trial_ends_at"),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
 });
 
 // ============================================================
@@ -36,7 +36,7 @@ export const users = sqliteTable("users", {
   role: text("role", { enum: ["owner", "admin", "manager", "cashier"] }).notNull().default("cashier"),
   defaultWarehouseId: integer("default_warehouse_id"),
   active: integer("active", { mode: "boolean" }).notNull().default(true),
-  createdAt: ts().notNull().$defaultFn(() => new Date()),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
 }, (t) => [
   uniqueIndex("users_tenant_email_idx").on(t.tenantId, t.email),
 ]);
@@ -54,7 +54,7 @@ export const warehouses = sqliteTable("warehouses", {
   logoUrl: text("logo_url"),
   allowsTransfers: integer("allows_transfers", { mode: "boolean" }).notNull().default(true),
   active: integer("active", { mode: "boolean" }).notNull().default(true),
-  createdAt: ts().notNull().$defaultFn(() => new Date()),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
 }, (t) => [
   index("warehouses_tenant_idx").on(t.tenantId),
 ]);
@@ -66,7 +66,7 @@ export const departments = sqliteTable("departments", {
   id: id(),
   tenantId: integer("tenant_id").notNull().references(() => tenants.id),
   name: text("name").notNull(),
-  createdAt: ts().notNull().$defaultFn(() => new Date()),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
 }, (t) => [
   uniqueIndex("departments_tenant_name_idx").on(t.tenantId, t.name),
 ]);
@@ -123,8 +123,8 @@ export const products = sqliteTable("products", {
   presentation: text("presentation"),
 
   active: integer("active", { mode: "boolean" }).notNull().default(true),
-  createdAt: ts().notNull().$defaultFn(() => new Date()),
-  updatedAt: ts().notNull().$defaultFn(() => new Date()),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
+  updatedAt: ts("updated_at").notNull().$defaultFn(() => new Date()),
 }, (t) => [
   index("products_tenant_idx").on(t.tenantId),
   index("products_barcode_idx").on(t.tenantId, t.barcode),
@@ -143,7 +143,7 @@ export const inventory = sqliteTable("inventory", {
   minQuantity: real("min_quantity").notNull().default(0),
   maxQuantity: real("max_quantity").notNull().default(0),
   lastCost: real("last_cost").notNull().default(0),
-  updatedAt: ts().notNull().$defaultFn(() => new Date()),
+  updatedAt: ts("updated_at").notNull().$defaultFn(() => new Date()),
 }, (t) => [
   uniqueIndex("inventory_wh_prod_idx").on(t.warehouseId, t.productId),
   index("inventory_tenant_idx").on(t.tenantId),
@@ -163,7 +163,7 @@ export const customers = sqliteTable("customers", {
   zipCode: text("zip_code"),
   taxRegime: text("tax_regime"),
   cfdiUse: text("cfdi_use"),
-  createdAt: ts().notNull().$defaultFn(() => new Date()),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
 }, (t) => [
   index("customers_tenant_idx").on(t.tenantId),
   index("customers_rfc_idx").on(t.tenantId, t.rfc),
@@ -186,12 +186,12 @@ export const sales = sqliteTable("sales", {
 
   status: text("status", { enum: ["completed", "cancelled", "draft"] }).notNull().default("completed"),
   cancelledById: integer("cancelled_by_id").references(() => users.id),
-  cancelledAt: ts(),
+  cancelledAt: ts("cancelled_at"),
 
   cfdiUuid: text("cfdi_uuid"),
   cfdiStatus: text("cfdi_status", { enum: ["none", "pending", "issued", "cancelled"] }).notNull().default("none"),
 
-  createdAt: ts().notNull().$defaultFn(() => new Date()),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
 }, (t) => [
   index("sales_tenant_date_idx").on(t.tenantId, t.createdAt),
   index("sales_warehouse_idx").on(t.warehouseId),
@@ -225,7 +225,7 @@ export const payments = sqliteTable("payments", {
   method: text("method", { enum: ["cash", "card_debit", "card_credit", "transfer", "wallet", "credit"] }).notNull(),
   amount: real("amount").notNull(),
   reference: text("reference"),
-  createdAt: ts().notNull().$defaultFn(() => new Date()),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
 }, (t) => [
   index("payments_sale_idx").on(t.saleId),
 ]);
@@ -243,7 +243,7 @@ export const doctors = sqliteTable("doctors", {
   phone: text("phone"),
   commissionPct: real("commission_pct").notNull().default(0),
   active: integer("active", { mode: "boolean" }).notNull().default(true),
-  createdAt: ts().notNull().$defaultFn(() => new Date()),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
 }, (t) => [
   index("doctors_tenant_idx").on(t.tenantId),
   uniqueIndex("doctors_cedula_idx").on(t.tenantId, t.cedula),
@@ -259,10 +259,10 @@ export const productLots = sqliteTable("product_lots", {
   productId: integer("product_id").notNull().references(() => products.id),
   warehouseId: integer("warehouse_id").notNull().references(() => warehouses.id),
   lot: text("lot").notNull(),
-  expiryDate: ts(),
+  expiryDate: ts("expiry_date"),
   qtyOnHand: real("qty_on_hand").notNull().default(0),
   unitCost: real("unit_cost").notNull().default(0),
-  receivedAt: ts().notNull().$defaultFn(() => new Date()),
+  receivedAt: ts("received_at").notNull().$defaultFn(() => new Date()),
 }, (t) => [
   index("lots_product_idx").on(t.productId, t.warehouseId),
   index("lots_expiry_idx").on(t.tenantId, t.expiryDate),
@@ -284,8 +284,8 @@ export const prescriptions = sqliteTable("prescriptions", {
   refillsUsed: integer("refills_used").notNull().default(0),
   patientName: text("patient_name"),
   patientAge: integer("patient_age"),
-  issuedAt: ts(),
-  createdAt: ts().notNull().$defaultFn(() => new Date()),
+  issuedAt: ts("issued_at"),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
 }, (t) => [
   index("rx_tenant_idx").on(t.tenantId),
   index("rx_sale_idx").on(t.saleId),
@@ -310,7 +310,7 @@ export const inventoryMovements = sqliteTable("inventory_movements", {
   supplierInvoice: text("supplier_invoice"),
   reason: text("reason"),
   userId: integer("user_id").references(() => users.id),
-  createdAt: ts().notNull().$defaultFn(() => new Date()),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
 }, (t) => [
   index("movs_book_idx").on(t.tenantId, t.warehouseId, t.controlledGroup, t.createdAt),
   index("movs_product_idx").on(t.productId, t.createdAt),
@@ -328,7 +328,7 @@ export const auditLog = sqliteTable("audit_log", {
   entityId: integer("entity_id"),
   payload: text("payload"),
   ipAddress: text("ip_address"),
-  createdAt: ts().notNull().$defaultFn(() => new Date()),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
 }, (t) => [
   index("audit_tenant_date_idx").on(t.tenantId, t.createdAt),
 ]);

@@ -7,12 +7,12 @@ CREATE TABLE `audit_log` (
 	`entity_id` integer,
 	`payload` text,
 	`ip_address` text,
-	`timestamp` integer NOT NULL,
+	`created_at` integer NOT NULL,
 	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE INDEX `audit_tenant_date_idx` ON `audit_log` (`tenant_id`,`timestamp`);--> statement-breakpoint
+CREATE INDEX `audit_tenant_date_idx` ON `audit_log` (`tenant_id`,`created_at`);--> statement-breakpoint
 CREATE TABLE `customers` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`tenant_id` integer NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE `customers` (
 	`zip_code` text,
 	`tax_regime` text,
 	`cfdi_use` text,
-	`timestamp` integer NOT NULL,
+	`created_at` integer NOT NULL,
 	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -34,7 +34,7 @@ CREATE TABLE `departments` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`tenant_id` integer NOT NULL,
 	`name` text NOT NULL,
-	`timestamp` integer NOT NULL,
+	`created_at` integer NOT NULL,
 	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -49,7 +49,7 @@ CREATE TABLE `doctors` (
 	`phone` text,
 	`commission_pct` real DEFAULT 0 NOT NULL,
 	`active` integer DEFAULT true NOT NULL,
-	`timestamp` integer NOT NULL,
+	`created_at` integer NOT NULL,
 	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -64,7 +64,7 @@ CREATE TABLE `inventory` (
 	`min_quantity` real DEFAULT 0 NOT NULL,
 	`max_quantity` real DEFAULT 0 NOT NULL,
 	`last_cost` real DEFAULT 0 NOT NULL,
-	`timestamp` integer NOT NULL,
+	`updated_at` integer NOT NULL,
 	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action
@@ -88,7 +88,7 @@ CREATE TABLE `inventory_movements` (
 	`supplier_invoice` text,
 	`reason` text,
 	`user_id` integer,
-	`timestamp` integer NOT NULL,
+	`created_at` integer NOT NULL,
 	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action,
@@ -98,15 +98,15 @@ CREATE TABLE `inventory_movements` (
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE INDEX `movs_book_idx` ON `inventory_movements` (`tenant_id`,`warehouse_id`,`controlled_group`,`timestamp`);--> statement-breakpoint
-CREATE INDEX `movs_product_idx` ON `inventory_movements` (`product_id`,`timestamp`);--> statement-breakpoint
+CREATE INDEX `movs_book_idx` ON `inventory_movements` (`tenant_id`,`warehouse_id`,`controlled_group`,`created_at`);--> statement-breakpoint
+CREATE INDEX `movs_product_idx` ON `inventory_movements` (`product_id`,`created_at`);--> statement-breakpoint
 CREATE TABLE `payments` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`sale_id` integer NOT NULL,
 	`method` text NOT NULL,
 	`amount` real NOT NULL,
 	`reference` text,
-	`timestamp` integer NOT NULL,
+	`created_at` integer NOT NULL,
 	FOREIGN KEY (`sale_id`) REFERENCES `sales`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -124,7 +124,8 @@ CREATE TABLE `prescriptions` (
 	`refills_used` integer DEFAULT 0 NOT NULL,
 	`patient_name` text,
 	`patient_age` integer,
-	`timestamp` integer NOT NULL,
+	`issued_at` integer,
+	`created_at` integer NOT NULL,
 	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`sale_id`) REFERENCES `sales`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`doctor_id`) REFERENCES `doctors`(`id`) ON UPDATE no action ON DELETE no action
@@ -138,16 +139,17 @@ CREATE TABLE `product_lots` (
 	`product_id` integer NOT NULL,
 	`warehouse_id` integer NOT NULL,
 	`lot` text NOT NULL,
-	`timestamp` integer NOT NULL,
+	`expiry_date` integer,
 	`qty_on_hand` real DEFAULT 0 NOT NULL,
 	`unit_cost` real DEFAULT 0 NOT NULL,
+	`received_at` integer NOT NULL,
 	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE INDEX `lots_product_idx` ON `product_lots` (`product_id`,`warehouse_id`);--> statement-breakpoint
-CREATE INDEX `lots_expiry_idx` ON `product_lots` (`tenant_id`,`timestamp`);--> statement-breakpoint
+CREATE INDEX `lots_expiry_idx` ON `product_lots` (`tenant_id`,`expiry_date`);--> statement-breakpoint
 CREATE TABLE `products` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`tenant_id` integer NOT NULL,
@@ -177,7 +179,8 @@ CREATE TABLE `products` (
 	`description` text,
 	`presentation` text,
 	`active` integer DEFAULT true NOT NULL,
-	`timestamp` integer NOT NULL,
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL,
 	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`department_id`) REFERENCES `departments`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`sale_unit_id`) REFERENCES `units`(`id`) ON UPDATE no action ON DELETE no action,
@@ -215,9 +218,10 @@ CREATE TABLE `sales` (
 	`total` real DEFAULT 0 NOT NULL,
 	`status` text DEFAULT 'completed' NOT NULL,
 	`cancelled_by_id` integer,
-	`timestamp` integer NOT NULL,
+	`cancelled_at` integer,
 	`cfdi_uuid` text,
 	`cfdi_status` text DEFAULT 'none' NOT NULL,
+	`created_at` integer NOT NULL,
 	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
@@ -225,7 +229,7 @@ CREATE TABLE `sales` (
 	FOREIGN KEY (`cancelled_by_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE INDEX `sales_tenant_date_idx` ON `sales` (`tenant_id`,`timestamp`);--> statement-breakpoint
+CREATE INDEX `sales_tenant_date_idx` ON `sales` (`tenant_id`,`created_at`);--> statement-breakpoint
 CREATE INDEX `sales_warehouse_idx` ON `sales` (`warehouse_id`);--> statement-breakpoint
 CREATE UNIQUE INDEX `sales_ticket_idx` ON `sales` (`tenant_id`,`warehouse_id`,`ticket_number`);--> statement-breakpoint
 CREATE TABLE `tenants` (
@@ -237,7 +241,8 @@ CREATE TABLE `tenants` (
 	`email` text NOT NULL,
 	`phone` text,
 	`status` text DEFAULT 'trial' NOT NULL,
-	`timestamp` integer NOT NULL
+	`trial_ends_at` integer,
+	`created_at` integer NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `tenants_slug_unique` ON `tenants` (`slug`);--> statement-breakpoint
@@ -259,7 +264,7 @@ CREATE TABLE `users` (
 	`role` text DEFAULT 'cashier' NOT NULL,
 	`default_warehouse_id` integer,
 	`active` integer DEFAULT true NOT NULL,
-	`timestamp` integer NOT NULL,
+	`created_at` integer NOT NULL,
 	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -274,7 +279,7 @@ CREATE TABLE `warehouses` (
 	`logo_url` text,
 	`allows_transfers` integer DEFAULT true NOT NULL,
 	`active` integer DEFAULT true NOT NULL,
-	`timestamp` integer NOT NULL,
+	`created_at` integer NOT NULL,
 	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint

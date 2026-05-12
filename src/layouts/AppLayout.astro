@@ -31,6 +31,7 @@ const nav = [
       { id: "productos",   label: "Productos",         href: "/app/productos",   icon: "pill" },
       { id: "clientes",    label: "Clientes",          href: "/app/clientes",    icon: "user" },
       { id: "proveedores", label: "Proveedores",       href: "/app/proveedores", icon: "factory" },
+      { id: "medicos",     label: "Médicos",           href: "/app/medicos",     icon: "doctor" },
     ],
   },
   {
@@ -53,6 +54,7 @@ const icons: Record<string, string> = {
   pill:   "M10 4l-6 6a4.24 4.24 0 006 6l6-6a4.24 4.24 0 00-6-6zM7 13l6-6",
   user:   "M16 11a4 4 0 11-8 0 4 4 0 018 0zM4 21v-2a4 4 0 014-4h8a4 4 0 014 4v2",
   factory:"M3 21V11l6 3V8l6 4V4l6 3v14H3zM7 17h2M11 17h2M15 17h2",
+  doctor: "M12 12a4 4 0 100-8 4 4 0 000 8zM6 21v-2a6 6 0 0112 0v2M16 14v3a2 2 0 11-4 0",
   chart:  "M3 3v18h18M7 14l4-4 4 4 5-7",
   shield: "M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4z",
   alert:  "M12 9v4m0 4h.01M4.93 19h14.14a2 2 0 001.74-3l-7.07-12a2 2 0 00-3.48 0L3.19 16a2 2 0 001.74 3z",
@@ -79,18 +81,30 @@ const icons: Record<string, string> = {
   <body class="min-h-screen bg-neutral-50 text-neutral-900 antialiased">
     <div class="flex min-h-screen">
       <!-- ============================================================
-           SIDEBAR
+           SIDEBAR (desktop fijo, mobile drawer)
            ============================================================ -->
-      <aside class="hidden w-64 flex-shrink-0 flex-col bg-blue-900 text-white md:flex">
-        <!-- Logo -->
-        <div class="border-b border-white/10 px-5 py-5">
+      <aside
+        id="sidebar"
+        class="fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col bg-blue-900 text-white transition-transform md:relative md:translate-x-0"
+        aria-label="Navegación principal"
+      >
+        <div class="flex items-center justify-between border-b border-white/10 px-5 py-5">
           <a href="/app" class="flex items-center gap-3">
             <img src="/brand/farmalat-isotipo-white.svg" alt="" class="h-9 w-9" />
             <span class="font-heading text-xl font-bold tracking-tight">FarmaLat</span>
           </a>
+          <button
+            type="button"
+            id="sidebar-close"
+            class="rounded-lg p-2 text-white/70 hover:bg-white/10 md:hidden"
+            aria-label="Cerrar menú"
+          >
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        <!-- Nav -->
         <nav class="flex-1 overflow-y-auto px-3 py-4">
           {nav.map((group) => (
             <div class="mb-6">
@@ -124,7 +138,6 @@ const icons: Record<string, string> = {
           ))}
         </nav>
 
-        <!-- User card -->
         <div class="border-t border-white/10 p-4">
           <div class="flex items-center gap-3">
             <div class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-orange font-heading text-sm font-bold">
@@ -138,21 +151,38 @@ const icons: Record<string, string> = {
         </div>
       </aside>
 
+      <!-- Overlay backdrop mobile -->
+      <div
+        id="sidebar-backdrop"
+        class="fixed inset-0 z-30 hidden bg-neutral-900/40 backdrop-blur-sm md:hidden"
+        aria-hidden="true"
+      ></div>
+
       <!-- ============================================================
            MAIN AREA
            ============================================================ -->
       <div class="flex min-w-0 flex-1 flex-col">
-        <!-- Topbar -->
-        <header class="flex h-14 items-center gap-4 border-b border-neutral-200 bg-white px-6">
+        <header class="flex h-14 items-center gap-3 border-b border-neutral-200 bg-white px-3 md:px-6">
+          <button
+            type="button"
+            id="sidebar-open"
+            class="rounded-lg p-2 text-neutral-600 hover:bg-neutral-100 md:hidden"
+            aria-label="Abrir menú"
+          >
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
           <div class="flex-1">
             <div class="relative max-w-md">
-              <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="7"/>
                 <path d="M21 21l-4-4"/>
               </svg>
               <input
                 type="search"
-                placeholder="Buscar producto, cliente, ticket..."
+                placeholder="Buscar..."
                 class="w-full rounded-lg border border-neutral-200 bg-neutral-50 py-2 pl-10 pr-3 text-sm placeholder:text-neutral-400 focus:border-blue-300 focus:bg-white focus:outline-none"
               />
               <kbd class="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border border-neutral-200 bg-white px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 md:block">
@@ -163,25 +193,45 @@ const icons: Record<string, string> = {
           <div class="flex items-center gap-2">
             <button
               type="button"
-              class="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-600 hover:bg-neutral-100"
+              class="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-600 hover:bg-neutral-100 md:inline-flex"
               title="Cambiar almacén"
             >
               📍 Matriz
             </button>
             <a
               href="/app/venta"
-              class="rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600"
+              class="rounded-lg bg-orange-500 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 md:px-4"
             >
-              Nueva venta
+              <span class="hidden md:inline">Nueva venta</span>
+              <span class="md:hidden">+ Venta</span>
             </a>
           </div>
         </header>
 
-        <!-- Content slot -->
         <main class="flex-1 overflow-y-auto">
           <slot />
         </main>
       </div>
     </div>
+
+    <script>
+      const sidebar = document.getElementById("sidebar");
+      const backdrop = document.getElementById("sidebar-backdrop");
+      const openBtn = document.getElementById("sidebar-open");
+      const closeBtn = document.getElementById("sidebar-close");
+
+      function open() {
+        sidebar?.classList.remove("-translate-x-full");
+        backdrop?.classList.remove("hidden");
+      }
+      function close() {
+        sidebar?.classList.add("-translate-x-full");
+        backdrop?.classList.add("hidden");
+      }
+
+      openBtn?.addEventListener("click", open);
+      closeBtn?.addEventListener("click", close);
+      backdrop?.addEventListener("click", close);
+    </script>
   </body>
 </html>
