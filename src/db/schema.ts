@@ -107,8 +107,12 @@ export const products = sqliteTable("products", {
   isDrug: integer("is_drug", { mode: "boolean" }).notNull().default(false),
   isAntibiotic: integer("is_antibiotic", { mode: "boolean" }).notNull().default(false),
   isGeneric: integer("is_generic", { mode: "boolean" }).notNull().default(false),
-  cofeprisGroup: text("cofepris_group"), // I, II, III, IV, V o null
+  // Grupo Art. 226 LGS: I estupefacientes, II psicotr. alta, III psicotr. media, IV antibioticos, V libre. Null = no controlado.
+  controlledGroup: text("controlled_group", { enum: ["I", "II", "III", "IV", "V"] }),
+  requiresPrescription: integer("requires_prescription", { mode: "boolean" }).notNull().default(false),
   retainsPrescription: integer("retains_prescription", { mode: "boolean" }).notNull().default(false),
+  manufacturerHolder: text("manufacturer_holder"),
+  tracksBatch: integer("tracks_batch", { mode: "boolean" }).notNull().default(false),
 
   // SAT
   satProdServKey: text("sat_prod_serv_key"),
@@ -224,6 +228,92 @@ export const payments = sqliteTable("payments", {
   createdAt: ts().notNull().$defaultFn(() => new Date()),
 }, (t) => [
   index("payments_sale_idx").on(t.saleId),
+]);
+
+// ============================================================
+// DOCTORS - médicos prescriptores (para comisiones y receta)
+// ============================================================
+export const doctors = sqliteTable("doctors", {
+  id: id(),
+  tenantId: integer("tenant_id").notNull().references(() => tenants.id),
+  cedula: text("cedula"),
+  fullName: text("full_name").notNull(),
+  specialty: text("specialty"),
+  email: text("email"),
+  phone: text("phone"),
+  commissionPct: real("commission_pct").notNull().default(0),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  createdAt: ts().notNull().$defaultFn(() => new Date()),
+}, (t) => [
+  index("doctors_tenant_idx").on(t.tenantId),
+  uniqueIndex("doctors_cedula_idx").on(t.tenantId, t.cedula),
+]);
+
+// ============================================================
+// PRODUCT_LOTS - lotes y caducidad por producto
+// Obligatorio para productos con controlledGroup. Opcional para resto en F1.
+// ============================================================
+export const productLots = sqliteTable("product_lots", {
+  id: id(),
+  tenantId: integer("tenant_id").notNull().references(() => tenants.id),
+  productId: integer("product_id").notNull().references(() => products.id),
+  warehouseId: integer("warehouse_id").notNull().references(() => warehouses.id),
+  lot: text("lot").notNull(),
+  expiryDate: ts(),
+  qtyOnHand: real("qty_on_hand").notNull().default(0),
+  unitCost: real("unit_cost").notNull().default(0),
+  receivedAt: ts().notNull().$defaultFn(() => new Date()),
+}, (t) => [
+  index("lots_product_idx").on(t.productId, t.warehouseId),
+  index("lots_expiry_idx").on(t.tenantId, t.expiryDate),
+]);
+
+// ============================================================
+// PRESCRIPTIONS - recetas asociadas a venta (Grupo I-III)
+// ============================================================
+export const prescriptions = sqliteTable("prescriptions", {
+  id: id(),
+  tenantId: integer("tenant_id").notNull().references(() => tenants.id),
+  saleId: integer("sale_id").references(() => sales.id),
+  doctorId: integer("doctor_id").references(() => doctors.id),
+  type: text("type", { enum: ["physical", "bar_code_cofepris", "electronic"] }).notNull().default("physical"),
+  barcode: text("barcode"),                       // codigo de barras COFEPRIS Grupo I
+  attachmentUrl: text("attachment_url"),          // R2 con la foto/escaneo
+  retained: integer("retained", { mode: "boolean" }).notNull().default(false),
+  refillsMax: integer("refills_max").notNull().default(1),
+  refillsUsed: integer("refills_used").notNull().default(0),
+  patientName: text("patient_name"),
+  patientAge: integer("patient_age"),
+  issuedAt: ts(),
+  createdAt: ts().notNull().$defaultFn(() => new Date()),
+}, (t) => [
+  index("rx_tenant_idx").on(t.tenantId),
+  index("rx_sale_idx").on(t.saleId),
+]);
+
+// ============================================================
+// INVENTORY_MOVEMENTS - libro de control con saldo materializado
+// ============================================================
+export const inventoryMovements = sqliteTable("inventory_movements", {
+  id: id(),
+  tenantId: integer("tenant_id").notNull().references(() => tenants.id),
+  warehouseId: integer("warehouse_id").notNull().references(() => warehouses.id),
+  productId: integer("product_id").notNull().references(() => products.id),
+  lotId: integer("lot_id").references(() => productLots.id),
+  controlledGroup: text("controlled_group", { enum: ["I", "II", "III", "IV", "V"] }),
+  type: text("type", { enum: ["purchase", "sale", "transfer_in", "transfer_out", "adjustment_in", "adjustment_out", "expired_loss", "return"] }).notNull(),
+  quantity: real("quantity").notNull(),           // positivo entrada, negativo salida
+  balanceAfter: real("balance_after").notNull(),  // saldo materializado para libro
+  unitCost: real("unit_cost"),
+  saleId: integer("sale_id").references(() => sales.id),
+  prescriptionId: integer("prescription_id").references(() => prescriptions.id),
+  supplierInvoice: text("supplier_invoice"),
+  reason: text("reason"),
+  userId: integer("user_id").references(() => users.id),
+  createdAt: ts().notNull().$defaultFn(() => new Date()),
+}, (t) => [
+  index("movs_book_idx").on(t.tenantId, t.warehouseId, t.controlledGroup, t.createdAt),
+  index("movs_product_idx").on(t.productId, t.createdAt),
 ]);
 
 // ============================================================

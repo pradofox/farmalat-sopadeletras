@@ -115,66 +115,96 @@ const features = [
          PRICING
          ============================================================ -->
     <section id="pricing" class="bg-neutral-50 py-24">
-      <div class="mx-auto max-w-4xl px-6 text-center">
-        <p class="mb-3 text-sm font-semibold uppercase tracking-wider text-brand-blue">
-          Precios
-        </p>
-        <h2 class="font-heading text-4xl font-bold text-neutral-900 md:text-5xl">
-          Un solo plan, sin sorpresas.
-        </h2>
-        <p class="mx-auto mt-4 max-w-2xl text-lg text-neutral-600">
-          Pensado para farmacias chicas y medianas que no quieren pelearse con la tecnología.
-        </p>
-
-        <div class="mt-12 rounded-3xl border-2 border-brand-blue bg-white p-10 text-left shadow-lg">
-          <div class="flex flex-wrap items-start justify-between gap-6">
-            <div>
-              <h3 class="font-heading text-2xl font-bold text-neutral-900">Plan Farmacia</h3>
-              <p class="mt-1 text-sm text-neutral-500">Por sucursal, sin cuotas de alta</p>
-            </div>
-            <div class="text-right">
-              <div class="font-mono text-5xl font-bold tabular text-brand-blue">$2,000</div>
-              <div class="text-sm text-neutral-500">MXN al mes</div>
-            </div>
-          </div>
-
-          <ul class="mt-8 space-y-3 text-sm text-neutral-700">
-            <li class="flex gap-3">
-              <span class="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success-50 text-success-500">✓</span>
-              <span>Punto de venta ilimitado, usuarios ilimitados</span>
-            </li>
-            <li class="flex gap-3">
-              <span class="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success-50 text-success-500">✓</span>
-              <span>Inventario multi-almacén, transferencias entre sucursales</span>
-            </li>
-            <li class="flex gap-3">
-              <span class="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success-50 text-success-500">✓</span>
-              <span>CFDI 4.0 (timbrado se cobra aparte, paquetes desde $0.50 MXN cada uno)</span>
-            </li>
-            <li class="flex gap-3">
-              <span class="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success-50 text-success-500">✓</span>
-              <span>Reportes COFEPRIS, ventas, comisiones, mínimos y máximos</span>
-            </li>
-            <li class="flex gap-3">
-              <span class="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success-50 text-success-500">✓</span>
-              <span>Migración de catálogo asistida desde tu sistema actual</span>
-            </li>
-            <li class="flex gap-3">
-              <span class="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success-50 text-success-500">✓</span>
-              <span>Soporte humano por WhatsApp en horario hábil</span>
-            </li>
-          </ul>
-
-          <a
-            href="#demo"
-            class="mt-10 block rounded-xl bg-brand-blue px-6 py-4 text-center text-base font-semibold text-white shadow-md transition hover:bg-blue-800"
-          >
-            Hablar con ventas
-          </a>
+      <div class="mx-auto max-w-6xl px-6">
+        <div class="mx-auto max-w-3xl text-center">
+          <p class="mb-3 text-sm font-semibold uppercase tracking-wider text-brand-blue">
+            Precios
+          </p>
+          <h2 class="font-heading text-4xl font-bold text-neutral-900 md:text-5xl">
+            Pricing claro, en pesos, sin tarjeta para probar.
+          </h2>
+          <p class="mx-auto mt-4 text-lg text-neutral-600">
+            Sin cuota de implementación. Sin compromiso anual. Cancelas cuando quieras.
+          </p>
         </div>
 
-        <p class="mt-6 text-sm text-neutral-500">
-          Primeras 8 semanas gratis para farmacias piloto. Sin compromiso, sin tarjeta.
+        <div class="mt-14 grid gap-6 lg:grid-cols-3">
+          <!-- Single -->
+          <article class="flex flex-col rounded-3xl border border-neutral-200 bg-white p-8 shadow-card">
+            <h3 class="font-heading text-xl font-bold text-neutral-900">Single</h3>
+            <p class="mt-1 text-sm text-neutral-500">Una farmacia, una caja</p>
+            <div class="mt-6">
+              <span class="font-mono text-5xl font-bold tabular text-neutral-900">$599</span>
+              <span class="ml-2 text-sm text-neutral-500">MXN / mes</span>
+            </div>
+            <ul class="mt-6 space-y-3 text-sm text-neutral-700">
+              <li class="flex gap-2"><span class="text-success-500">✓</span> 1 sucursal, hasta 2 cajas</li>
+              <li class="flex gap-2"><span class="text-success-500">✓</span> 2 usuarios</li>
+              <li class="flex gap-2"><span class="text-success-500">✓</span> POS, inventario, CFDI 4.0</li>
+              <li class="flex gap-2"><span class="text-success-500">✓</span> Reporte COFEPRIS automatizado</li>
+            </ul>
+            <a
+              href="#demo"
+              class="mt-8 block rounded-xl border-2 border-brand-blue px-6 py-3 text-center text-sm font-semibold text-brand-blue transition hover:bg-blue-50"
+            >
+              Probar gratis 30 días
+            </a>
+          </article>
+
+          <!-- Multi (destacado) -->
+          <article class="relative flex flex-col rounded-3xl border-2 border-brand-blue bg-white p-8 shadow-lg lg:scale-[1.02]">
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-orange-500 px-4 py-1 text-xs font-bold uppercase tracking-wider text-white">
+              Más popular
+            </div>
+            <h3 class="font-heading text-xl font-bold text-neutral-900">Multi</h3>
+            <p class="mt-1 text-sm text-neutral-500">Hasta 3 sucursales</p>
+            <div class="mt-6">
+              <span class="font-mono text-5xl font-bold tabular text-brand-blue">$1,799</span>
+              <span class="ml-2 text-sm text-neutral-500">MXN / mes</span>
+            </div>
+            <ul class="mt-6 space-y-3 text-sm text-neutral-700">
+              <li class="flex gap-2"><span class="text-success-500">✓</span> Hasta 3 sucursales, cajas ilimitadas</li>
+              <li class="flex gap-2"><span class="text-success-500">✓</span> Usuarios ilimitados</li>
+              <li class="flex gap-2"><span class="text-success-500">✓</span> Transferencias entre almacenes</li>
+              <li class="flex gap-2"><span class="text-success-500">✓</span> Comisiones por médico</li>
+              <li class="flex gap-2"><span class="text-success-500">✓</span> Portal de autofactura para tus clientes</li>
+              <li class="flex gap-2"><span class="text-success-500">✓</span> Migración de catálogo asistida</li>
+            </ul>
+            <a
+              href="#demo"
+              class="mt-8 block rounded-xl bg-orange-500 px-6 py-3 text-center text-sm font-bold text-white shadow-md transition hover:bg-orange-600"
+            >
+              Probar gratis 30 días
+            </a>
+          </article>
+
+          <!-- Hospitalaria -->
+          <article class="flex flex-col rounded-3xl border border-neutral-200 bg-white p-8 shadow-card">
+            <h3 class="font-heading text-xl font-bold text-neutral-900">Hospitalaria</h3>
+            <p class="mt-1 text-sm text-neutral-500">Cadenas y farmacia hospitalaria</p>
+            <div class="mt-6">
+              <span class="font-mono text-5xl font-bold tabular text-neutral-900">$4,500</span>
+              <span class="ml-2 text-sm text-neutral-500">MXN / mes</span>
+            </div>
+            <ul class="mt-6 space-y-3 text-sm text-neutral-700">
+              <li class="flex gap-2"><span class="text-success-500">✓</span> Sucursales ilimitadas</li>
+              <li class="flex gap-2"><span class="text-success-500">✓</span> Cuentas-paciente hospitalario</li>
+              <li class="flex gap-2"><span class="text-success-500">✓</span> Convenios con aseguradoras</li>
+              <li class="flex gap-2"><span class="text-success-500">✓</span> API y reportería avanzada</li>
+              <li class="flex gap-2"><span class="text-success-500">✓</span> Soporte prioritario</li>
+            </ul>
+            <a
+              href="#demo"
+              class="mt-8 block rounded-xl border-2 border-brand-blue px-6 py-3 text-center text-sm font-semibold text-brand-blue transition hover:bg-blue-50"
+            >
+              Agendar demo
+            </a>
+          </article>
+        </div>
+
+        <p class="mt-10 text-center text-sm text-neutral-500">
+          Timbres CFDI 4.0 desde $1.00 MXN cada uno. Hardware compatible:
+          impresora térmica 80mm, escáner USB y cajón monedero estándar. <a href="#demo" class="text-brand-blue hover:underline">Ver detalle</a>.
         </p>
       </div>
     </section>
