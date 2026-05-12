@@ -1,0 +1,211 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+
+const items = [
+  { qty: 1, name: "PARACETAMOL 750MG C/10 TABS",       price: 18.00,  ivaPct: 0,  iva: 0,    total: 18.00 },
+  { qty: 2, name: "AMOXICILINA 875MG C/10 TABS",       price: 92.00,  ivaPct: 0,  iva: 0,    total: 184.00 },
+  { qty: 1, name: "DOLO-NEUROBION FORTE C/30 GRAGEAS", price: 360.50, ivaPct: 16, iva: 49.72, total: 410.22 },
+];
+
+const subtotal = items.reduce((a, i) => a + i.price * i.qty, 0);
+const ivaTotal = items.reduce((a, i) => a + i.iva, 0);
+const total    = items.reduce((a, i) => a + i.total, 0);
+
+const fmt = (n: number) => "$" + n.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+---
+
+<AppLayout title="Punto de Venta" activeRoute="venta">
+  <div class="flex h-[calc(100vh-3.5rem)] flex-col">
+    <!-- ============================================================
+         CABECERA: doctor + scanner
+         ============================================================ -->
+    <div class="border-b border-neutral-200 bg-white px-6 py-4">
+      <div class="grid gap-4 md:grid-cols-[1fr_2fr_auto]">
+        <!-- Doctor / Receta -->
+        <div>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">
+            Médico (opcional)
+          </label>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              placeholder="Cédula o nombre del médico"
+              class="flex-1 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-blue-300 focus:bg-white focus:outline-none"
+            />
+            <button
+              type="button"
+              class="rounded-lg bg-blue-100 px-3 py-2 text-blue-700 transition hover:bg-blue-200"
+              title="Agregar médico"
+            >
+              <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scanner -->
+        <div>
+          <label class="mb-1 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-neutral-500">
+            <span>Producto</span>
+            <span class="inline-flex items-center gap-1 normal-case text-neutral-400">
+              <span class="h-2 w-2 animate-pulse rounded-full bg-success-500"></span>
+              Escáner listo
+            </span>
+          </label>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              autofocus
+              placeholder="Escanea o escribe el código de barras"
+              class="flex-1 rounded-lg border-2 border-blue-300 bg-white px-3 py-2 font-mono text-sm placeholder:text-neutral-400 focus:border-brand-blue focus:outline-none"
+            />
+            <button
+              type="button"
+              class="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
+            >
+              Buscar
+              <kbd class="ml-2 rounded bg-blue-800 px-1 py-0.5 font-mono text-[10px] text-blue-200">F2</kbd>
+            </button>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex items-end">
+          <button
+            type="button"
+            class="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-600 transition hover:bg-neutral-100"
+          >
+            Cliente: Público
+            <kbd class="ml-2 rounded border border-neutral-300 px-1 py-0.5 font-mono text-[10px] text-neutral-500">F3</kbd>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         CONTENIDO: tabla items + panel derecho
+         ============================================================ -->
+    <div class="grid flex-1 min-h-0 grid-cols-1 lg:grid-cols-[1fr_360px]">
+      <!-- Items -->
+      <div class="overflow-y-auto">
+        <table class="w-full">
+          <thead class="sticky top-0 bg-neutral-50 shadow-sm">
+            <tr class="text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
+              <th class="w-16 px-5 py-3 text-center">Cant.</th>
+              <th class="px-5 py-3">Producto</th>
+              <th class="w-24 px-5 py-3 text-right">Precio</th>
+              <th class="w-24 px-5 py-3 text-right">IVA</th>
+              <th class="w-28 px-5 py-3 text-right">Total</th>
+              <th class="w-10"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-neutral-200">
+            {items.map((it) => (
+              <tr class="transition hover:bg-blue-50/30">
+                <td class="px-5 py-3 text-center">
+                  <input
+                    type="text"
+                    value={it.qty}
+                    class="w-12 rounded border border-neutral-200 bg-white px-2 py-1 text-center font-mono text-sm focus:border-blue-300 focus:outline-none"
+                  />
+                </td>
+                <td class="px-5 py-3 text-sm font-medium text-neutral-900">{it.name}</td>
+                <td class="px-5 py-3 text-right font-mono text-sm tabular text-neutral-700">{fmt(it.price)}</td>
+                <td class="px-5 py-3 text-right font-mono text-xs tabular text-neutral-500">
+                  {it.ivaPct === 0 ? <span class="text-neutral-400">exento</span> : fmt(it.iva)}
+                </td>
+                <td class="px-5 py-3 text-right font-mono text-sm font-semibold tabular text-neutral-900">{fmt(it.total)}</td>
+                <td class="px-2 py-3">
+                  <button class="rounded p-1 text-neutral-400 transition hover:bg-danger-50 hover:text-danger-500" title="Eliminar">
+                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" />
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div class="px-5 py-8 text-center text-sm text-neutral-400">
+          {items.length} {items.length === 1 ? "producto" : "productos"} en la venta · Escanea otro para agregar
+        </div>
+      </div>
+
+      <!-- Panel derecho: totales y cobrar -->
+      <aside class="flex flex-col border-l border-neutral-200 bg-white">
+        <div class="flex-1 space-y-3 p-6">
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-neutral-500">Subtotal</span>
+            <span class="font-mono tabular text-neutral-700">{fmt(subtotal)}</span>
+          </div>
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-neutral-500">IVA</span>
+            <span class="font-mono tabular text-neutral-700">{fmt(ivaTotal)}</span>
+          </div>
+          <div class="border-t border-neutral-200 pt-3">
+            <div class="flex items-center justify-between">
+              <span class="font-heading text-sm font-semibold uppercase tracking-wider text-neutral-700">Total</span>
+              <span class="font-mono text-3xl font-bold tabular text-brand-blue">{fmt(total)}</span>
+            </div>
+          </div>
+
+          <!-- Forma de pago -->
+          <div class="mt-6 space-y-2">
+            <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Forma de pago</div>
+            <div class="grid grid-cols-2 gap-2">
+              <button class="rounded-lg border-2 border-brand-blue bg-blue-50 px-3 py-2.5 text-sm font-semibold text-brand-blue">
+                Efectivo
+              </button>
+              <button class="rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm font-medium text-neutral-600 hover:border-blue-300">
+                Tarjeta
+              </button>
+              <button class="rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm font-medium text-neutral-600 hover:border-blue-300">
+                Transferencia
+              </button>
+              <button class="rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm font-medium text-neutral-600 hover:border-blue-300">
+                Mixto
+              </button>
+            </div>
+          </div>
+
+          <!-- Recibido / cambio -->
+          <div class="mt-4 space-y-2">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-500">Recibido</label>
+            <input
+              type="text"
+              placeholder="$0.00"
+              class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-right font-mono text-lg tabular focus:border-blue-300 focus:bg-white focus:outline-none"
+            />
+            <div class="flex items-center justify-between rounded-lg bg-success-50 px-3 py-2 text-sm">
+              <span class="font-semibold text-success-500">Cambio</span>
+              <span class="font-mono text-lg font-bold tabular text-success-500">$0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer del panel: cobrar -->
+        <div class="space-y-2 border-t border-neutral-200 bg-neutral-50 p-4">
+          <button
+            type="button"
+            class="flex w-full items-center justify-between rounded-xl bg-orange-500 px-6 py-5 text-left font-heading text-xl font-bold text-white shadow-md transition hover:bg-orange-600 hover:shadow-lg"
+          >
+            <span>Cobrar</span>
+            <span class="flex items-center gap-3">
+              <span class="font-mono tabular text-2xl">{fmt(total)}</span>
+              <kbd class="rounded bg-white/20 px-2 py-1 font-mono text-xs">F12</kbd>
+            </span>
+          </button>
+          <button
+            type="button"
+            class="w-full rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-600 transition hover:bg-neutral-100"
+          >
+            Cancelar venta
+            <kbd class="ml-2 rounded border border-neutral-300 px-1 py-0.5 font-mono text-[10px] text-neutral-500">Esc</kbd>
+          </button>
+        </div>
+      </aside>
+    </div>
+  </div>
+</AppLayout>

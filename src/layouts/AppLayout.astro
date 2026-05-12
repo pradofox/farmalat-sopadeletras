@@ -1,0 +1,187 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  activeRoute?: string;
+}
+
+const { title = "FarmaLat", activeRoute = "" } = Astro.props;
+
+const nav = [
+  {
+    section: "Punto de Venta",
+    items: [
+      { id: "venta",       label: "Venta",              href: "/app/venta",       icon: "cart" },
+      { id: "historial",   label: "Historial de Ventas", href: "/app/historial",   icon: "list" },
+      { id: "cotizacion",  label: "Cotización",          href: "/app/cotizacion",  icon: "doc" },
+    ],
+  },
+  {
+    section: "Almacén",
+    items: [
+      { id: "inventario",  label: "Inventarios",       href: "/app/inventario",  icon: "box" },
+      { id: "movimientos", label: "Movimientos",       href: "/app/movimientos", icon: "arrows" },
+      { id: "ordenes",     label: "Órdenes",           href: "/app/ordenes",     icon: "truck" },
+    ],
+  },
+  {
+    section: "Catálogos",
+    items: [
+      { id: "productos",   label: "Productos",         href: "/app/productos",   icon: "pill" },
+      { id: "clientes",    label: "Clientes",          href: "/app/clientes",    icon: "user" },
+      { id: "proveedores", label: "Proveedores",       href: "/app/proveedores", icon: "factory" },
+    ],
+  },
+  {
+    section: "Reportes",
+    items: [
+      { id: "ventas-rep",  label: "Ventas",            href: "/app/reportes/ventas",  icon: "chart" },
+      { id: "cofepris",    label: "COFEPRIS",          href: "/app/reportes/cofepris", icon: "shield" },
+      { id: "min-max",     label: "Mínimos / Máximos", href: "/app/reportes/min-max", icon: "alert" },
+    ],
+  },
+];
+
+const icons: Record<string, string> = {
+  cart:   "M3 4h2l2 12h12l2-9H7M9 21a1 1 0 100-2 1 1 0 000 2zm10 0a1 1 0 100-2 1 1 0 000 2z",
+  list:   "M4 6h16M4 12h16M4 18h16",
+  doc:    "M9 4h6l4 4v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2zm6 0v4h4",
+  box:    "M21 7L12 2 3 7v10l9 5 9-5V7zM3 7l9 5 9-5M12 22V12",
+  arrows: "M7 10h10M7 14h10M3 7l4-4 4 4M21 17l-4 4-4-4",
+  truck:  "M3 7h12v8H3zM15 11h4l2 3v1h-6zM6 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm12 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3z",
+  pill:   "M10 4l-6 6a4.24 4.24 0 006 6l6-6a4.24 4.24 0 00-6-6zM7 13l6-6",
+  user:   "M16 11a4 4 0 11-8 0 4 4 0 018 0zM4 21v-2a4 4 0 014-4h8a4 4 0 014 4v2",
+  factory:"M3 21V11l6 3V8l6 4V4l6 3v14H3zM7 17h2M11 17h2M15 17h2",
+  chart:  "M3 3v18h18M7 14l4-4 4 4 5-7",
+  shield: "M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4z",
+  alert:  "M12 9v4m0 4h.01M4.93 19h14.14a2 2 0 001.74-3l-7.07-12a2 2 0 00-3.48 0L3.19 16a2 2 0 001.74 3z",
+};
+---
+
+<!doctype html>
+<html lang="es-MX">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#080451" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>{title} · FarmaLat</title>
+  </head>
+  <body class="min-h-screen bg-neutral-50 text-neutral-900 antialiased">
+    <div class="flex min-h-screen">
+      <!-- ============================================================
+           SIDEBAR
+           ============================================================ -->
+      <aside class="hidden w-64 flex-shrink-0 flex-col bg-blue-900 text-white md:flex">
+        <!-- Logo -->
+        <div class="border-b border-white/10 px-5 py-5">
+          <a href="/app" class="flex items-center gap-3">
+            <img src="/brand/farmalat-isotipo-white.svg" alt="" class="h-9 w-9" />
+            <span class="font-heading text-xl font-bold tracking-tight">FarmaLat</span>
+          </a>
+        </div>
+
+        <!-- Nav -->
+        <nav class="flex-1 overflow-y-auto px-3 py-4">
+          {nav.map((group) => (
+            <div class="mb-6">
+              <div class="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                {group.section}
+              </div>
+              <ul class="space-y-1">
+                {group.items.map((item) => {
+                  const isActive = activeRoute === item.id;
+                  return (
+                    <li>
+                      <a
+                        href={item.href}
+                        class={
+                          "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition " +
+                          (isActive
+                            ? "bg-brand-blue text-white shadow-md"
+                            : "text-white/70 hover:bg-white/5 hover:text-white")
+                        }
+                      >
+                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d={icons[item.icon]} />
+                        </svg>
+                        <span>{item.label}</span>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
+
+        <!-- User card -->
+        <div class="border-t border-white/10 p-4">
+          <div class="flex items-center gap-3">
+            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-orange font-heading text-sm font-bold">
+              VB
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-sm font-semibold text-white">Virgilio Bustos</div>
+              <div class="truncate text-xs text-white/50">Farmacia Alfa · Matriz</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ============================================================
+           MAIN AREA
+           ============================================================ -->
+      <div class="flex min-w-0 flex-1 flex-col">
+        <!-- Topbar -->
+        <header class="flex h-14 items-center gap-4 border-b border-neutral-200 bg-white px-6">
+          <div class="flex-1">
+            <div class="relative max-w-md">
+              <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="7"/>
+                <path d="M21 21l-4-4"/>
+              </svg>
+              <input
+                type="search"
+                placeholder="Buscar producto, cliente, ticket..."
+                class="w-full rounded-lg border border-neutral-200 bg-neutral-50 py-2 pl-10 pr-3 text-sm placeholder:text-neutral-400 focus:border-blue-300 focus:bg-white focus:outline-none"
+              />
+              <kbd class="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border border-neutral-200 bg-white px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 md:block">
+                ⌘K
+              </kbd>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-600 hover:bg-neutral-100"
+              title="Cambiar almacén"
+            >
+              📍 Matriz
+            </button>
+            <a
+              href="/app/venta"
+              class="rounded-lg bg-orange-500 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600"
+            >
+              Nueva venta
+            </a>
+          </div>
+        </header>
+
+        <!-- Content slot -->
+        <main class="flex-1 overflow-y-auto">
+          <slot />
+        </main>
+      </div>
+    </div>
+  </body>
+</html>
