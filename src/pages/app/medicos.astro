@@ -1,0 +1,63 @@
+---
+export const prerender = false;
+import AppLayout from "../../layouts/AppLayout.astro";
+import { getDb, schema } from "../../lib/db";
+import { eq } from "drizzle-orm";
+
+const db = getDb();
+const tenantId = Astro.locals.tenantId;
+
+const doctors = await db.select().from(schema.doctors).where(eq(schema.doctors.tenantId, tenantId)).orderBy(schema.doctors.fullName);
+---
+
+<AppLayout title="Médicos" activeRoute="medicos">
+  <div class="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
+    <header class="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="font-heading text-2xl font-bold text-neutral-900 md:text-3xl">Médicos</h1>
+        <p class="mt-1 text-sm text-neutral-500">
+          {doctors.length} {doctors.length === 1 ? "médico" : "médicos"} con comisión configurable
+        </p>
+      </div>
+      <a href="/app/medicos/nuevo" class="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-800">+ Nuevo médico</a>
+    </header>
+
+    <div class="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-card">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-neutral-50">
+            <tr class="text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
+              <th class="px-4 py-3 md:px-5">Nombre</th>
+              <th class="px-4 py-3 md:px-5">Cédula</th>
+              <th class="hidden px-4 py-3 md:table-cell md:px-5">Especialidad</th>
+              <th class="hidden px-4 py-3 lg:table-cell lg:px-5">Email</th>
+              <th class="hidden px-4 py-3 lg:table-cell lg:px-5">Teléfono</th>
+              <th class="px-4 py-3 text-right md:px-5">Comisión</th>
+              <th class="w-12"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-neutral-100">
+            {doctors.map((d) => (
+              <tr class="transition hover:bg-blue-50/40">
+                <td class="px-4 py-3 font-medium text-neutral-900 md:px-5">{d.fullName}</td>
+                <td class="px-4 py-3 font-mono text-xs text-neutral-700 md:px-5">{d.cedula ?? "—"}</td>
+                <td class="hidden px-4 py-3 text-neutral-600 md:table-cell md:px-5">{d.specialty ?? "—"}</td>
+                <td class="hidden px-4 py-3 text-neutral-600 lg:table-cell lg:px-5">{d.email ?? "—"}</td>
+                <td class="hidden px-4 py-3 text-neutral-600 lg:table-cell lg:px-5">{d.phone ?? "—"}</td>
+                <td class="px-4 py-3 text-right font-mono text-sm font-semibold tabular text-brand-blue md:px-5">{d.commissionPct}%</td>
+                <td class="px-2 py-3">
+                  <a href={`/app/medicos/${d.id}`} class="rounded p-1 text-neutral-400 transition hover:bg-blue-50 hover:text-brand-blue" aria-label="Editar">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4h-7v16h16v-7M18 2l4 4-10 10h-4v-4z"/></svg>
+                  </a>
+                </td>
+              </tr>
+            ))}
+            {doctors.length === 0 && (
+              <tr><td colspan="7" class="px-5 py-16 text-center text-sm text-neutral-400">Sin médicos.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</AppLayout>

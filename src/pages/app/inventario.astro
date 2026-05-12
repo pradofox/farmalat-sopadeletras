@@ -1,0 +1,151 @@
+---
+export const prerender = false;
+import AppLayout from "../../layouts/AppLayout.astro";
+import { getDb, schema } from "../../lib/db";
+import { and, eq, like, or, sql } from "drizzle-orm";
+
+const db = getDb();
+const tenantId = Astro.locals.tenantId;
+
+const warehouses = await db
+  .select({ id: schema.warehouses.id, name: schema.warehouses.name })
+  .from(schema.warehouses)
+  .where(eq(schema.warehouses.tenantId, tenantId));
+
+const warehouseId = Number(Astro.url.searchParams.get("w") ?? warehouses[0]?.id ?? 0);
+const q = (Astro.url.searchParams.get("q") ?? "").trim();
+const filter = (Astro.url.searchParams.get("f") ?? "all") as "all" | "low" | "zero";
+
+const productFilter = q
+  ? and(
+      eq(schema.products.tenantId, tenantId),
+      or(like(schema.products.name, `%${q}%`), like(schema.products.barcode, `%${q}%`)),
+    )
+  : eq(schema.products.tenantId, tenantId);
+
+const rows = await db
+  .select({
+    productId: schema.products.id,
+    name: schema.products.name,
+    barcode: schema.products.barcode,
+    publicPrice: schema.products.publicPrice,
+    quantity: schema.inventory.quantity,
+    min: schema.inventory.minQuantity,
+    max: schema.inventory.maxQuantity,
+    lastCost: schema.inventory.lastCost,
+    invId: schema.inventory.id,
+  })
+  .from(schema.products)
+  .leftJoin(
+    schema.inventory,
+    and(
+      eq(schema.inventory.productId, schema.products.id),
+      eq(schema.inventory.warehouseId, warehouseId),
+    ),
+  )
+  .where(productFilter)
+  .orderBy(schema.products.name)
+  .limit(500);
+
+const filtered = rows.filter((r) => {
+  const qty = r.quantity ?? 0;
+  if (filter === "low") return qty > 0 && qty <= (r.min ?? 0);
+  if (filter === "zero") return qty === 0;
+  return true;
+});
+
+const totalValueRow = await db
+  .select({
+    v: sql<number>`coalesce(sum(${schema.inventory.quantity} * ${schema.inventory.lastCost}), 0)`,
+    units: sql<number>`coalesce(sum(${schema.inventory.quantity}), 0)`,
+  })
+  .from(schema.inventory)
+  .where(and(eq(schema.inventory.tenantId, tenantId), eq(schema.inventory.warehouseId, warehouseId)));
+const totalValue = totalValueRow[0]?.v ?? 0;
+const totalUnits = totalValueRow[0]?.units ?? 0;
+
+const fmt = (n: number) => "$" + n.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+function stockBadge(qty: number, min: number) {
+  if (qty === 0) return { label: "Agotado", cls: "bg-danger-50 text-danger-500" };
+  if (qty <= min) return { label: "Bajo mínimo", cls: "bg-warning-50 text-warning-500" };
+  return { label: "OK", cls: "bg-success-50 text-success-500" };
+}
+---
+
+<AppLayout title="Inventario" activeRoute="inventario">
+  <div class="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
+    <header class="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="font-heading text-2xl font-bold text-neutral-900 md:text-3xl">Inventario</h1>
+        <p class="mt-1 text-sm text-neutral-500">
+          {totalUnits.toLocaleString("es-MX")} unidades · Valor a costo {fmt(totalValue)}
+        </p>
+      </div>
+    </header>
+
+    <form method="get" class="mb-4 grid gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-card md:grid-cols-[1fr_auto_auto]">
+      <div class="relative">
+        <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>
+        </svg>
+        <input name="q" type="search" value={q} placeholder="Buscar producto o código..." class="w-full rounded-lg border border-neutral-200 bg-neutral-50 py-2.5 pl-10 pr-3 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+      </div>
+      <select name="w" class="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm focus:border-blue-300 focus:bg-white focus:outline-none">
+        {warehouses.map((w) => (
+          <option value={w.id} selected={w.id === warehouseId}>{w.name}</option>
+        ))}
+      </select>
+      <select name="f" class="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm focus:border-blue-300 focus:bg-white focus:outline-none">
+        <option value="all" selected={filter === "all"}>Todos</option>
+        <option value="low" selected={filter === "low"}>Bajo mínimo</option>
+        <option value="zero" selected={filter === "zero"}>Agotados</option>
+      </select>
+    </form>
+
+    <div class="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-card">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-neutral-50">
+            <tr class="text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
+              <th class="px-4 py-3 md:px-5">Producto</th>
+              <th class="hidden px-4 py-3 md:table-cell md:px-5">Código</th>
+              <th class="px-4 py-3 text-center md:px-5">Estado</th>
+              <th class="px-4 py-3 text-right md:px-5">Existencia</th>
+              <th class="hidden px-4 py-3 text-right md:table-cell md:px-5">Mín</th>
+              <th class="hidden px-4 py-3 text-right md:table-cell md:px-5">Máx</th>
+              <th class="hidden px-4 py-3 text-right md:table-cell md:px-5">Costo unit.</th>
+              <th class="hidden px-4 py-3 text-right lg:table-cell lg:px-5">Precio</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-neutral-100">
+            {filtered.map((r) => {
+              const qty = r.quantity ?? 0;
+              const min = r.min ?? 0;
+              const max = r.max ?? 0;
+              const cost = r.lastCost ?? 0;
+              const badge = stockBadge(qty, min);
+              return (
+                <tr class="transition hover:bg-blue-50/40">
+                  <td class="px-4 py-3 font-medium text-neutral-900 md:px-5">{r.name}</td>
+                  <td class="hidden px-4 py-3 font-mono text-xs text-neutral-600 md:table-cell md:px-5">{r.barcode ?? "—"}</td>
+                  <td class="px-4 py-3 text-center md:px-5">
+                    <span class={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${badge.cls}`}>{badge.label}</span>
+                  </td>
+                  <td class="px-4 py-3 text-right font-mono font-semibold tabular md:px-5">{qty}</td>
+                  <td class="hidden px-4 py-3 text-right font-mono text-xs tabular text-neutral-500 md:table-cell md:px-5">{min}</td>
+                  <td class="hidden px-4 py-3 text-right font-mono text-xs tabular text-neutral-500 md:table-cell md:px-5">{max}</td>
+                  <td class="hidden px-4 py-3 text-right font-mono text-xs tabular text-neutral-500 md:table-cell md:px-5">{fmt(cost)}</td>
+                  <td class="hidden px-4 py-3 text-right font-mono text-xs tabular text-neutral-700 lg:table-cell lg:px-5">{fmt(r.publicPrice)}</td>
+                </tr>
+              );
+            })}
+            {filtered.length === 0 && (
+              <tr><td colspan="8" class="px-5 py-16 text-center text-sm text-neutral-400">Sin productos que coincidan.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</AppLayout>

@@ -1,0 +1,154 @@
+---
+export const prerender = false;
+import AppLayout from "../../layouts/AppLayout.astro";
+import { getDb, schema } from "../../lib/db";
+import { and, eq, gte, lte, desc } from "drizzle-orm";
+
+const db = getDb();
+const tenantId = Astro.locals.tenantId;
+
+const today = new Date(); today.setHours(0, 0, 0, 0);
+const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 30);
+const fromStr = Astro.url.searchParams.get("from") ?? weekAgo.toISOString().slice(0, 10);
+const toStr = Astro.url.searchParams.get("to") ?? today.toISOString().slice(0, 10);
+const typeFilter = Astro.url.searchParams.get("type") ?? "all";
+const groupFilter = Astro.url.searchParams.get("group") ?? "all";
+
+const fromTs = new Date(fromStr + "T00:00:00").getTime();
+const toTs = new Date(toStr + "T23:59:59.999").getTime();
+
+const conds = [
+  eq(schema.inventoryMovements.tenantId, tenantId),
+  gte(schema.inventoryMovements.createdAt, new Date(fromTs)),
+  lte(schema.inventoryMovements.createdAt, new Date(toTs)),
+];
+if (typeFilter !== "all") conds.push(eq(schema.inventoryMovements.type, typeFilter as any));
+if (groupFilter !== "all") conds.push(eq(schema.inventoryMovements.controlledGroup, groupFilter as any));
+
+const movs = await db
+  .select({
+    id: schema.inventoryMovements.id,
+    type: schema.inventoryMovements.type,
+    quantity: schema.inventoryMovements.quantity,
+    balanceAfter: schema.inventoryMovements.balanceAfter,
+    controlledGroup: schema.inventoryMovements.controlledGroup,
+    createdAt: schema.inventoryMovements.createdAt,
+    product: schema.products.name,
+    barcode: schema.products.barcode,
+    warehouse: schema.warehouses.name,
+    user: schema.users.name,
+  })
+  .from(schema.inventoryMovements)
+  .leftJoin(schema.products, eq(schema.inventoryMovements.productId, schema.products.id))
+  .leftJoin(schema.warehouses, eq(schema.inventoryMovements.warehouseId, schema.warehouses.id))
+  .leftJoin(schema.users, eq(schema.inventoryMovements.userId, schema.users.id))
+  .where(and(...conds))
+  .orderBy(desc(schema.inventoryMovements.createdAt))
+  .limit(500);
+
+const fmtDate = (d: Date | null) =>
+  d ? new Date(d).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" }) : "";
+
+const typeLabels: Record<string, { label: string; cls: string }> = {
+  purchase:        { label: "Compra",          cls: "bg-success-50 text-success-500" },
+  sale:            { label: "Venta",           cls: "bg-blue-50 text-brand-blue" },
+  transfer_in:    { label: "Entrada traslado", cls: "bg-success-50 text-success-500" },
+  transfer_out:   { label: "Salida traslado",  cls: "bg-warning-50 text-warning-500" },
+  adjustment_in:  { label: "Ajuste +",         cls: "bg-success-50 text-success-500" },
+  adjustment_out: { label: "Ajuste −",         cls: "bg-warning-50 text-warning-500" },
+  expired_loss:   { label: "Caducidad",        cls: "bg-danger-50 text-danger-500" },
+  return:         { label: "Devolución",       cls: "bg-neutral-100 text-neutral-600" },
+};
+---
+
+<AppLayout title="Movimientos" activeRoute="movimientos">
+  <div class="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
+    <header class="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="font-heading text-2xl font-bold text-neutral-900 md:text-3xl">Movimientos de inventario</h1>
+        <p class="mt-1 text-sm text-neutral-500">
+          {movs.length} movimientos · Libro de control con balance materializado
+        </p>
+      </div>
+    </header>
+
+    <form method="get" class="mb-4 grid gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-card md:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+      <label class="block">
+        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Desde</span>
+        <input type="date" name="from" value={fromStr} class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+      </label>
+      <label class="block">
+        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Hasta</span>
+        <input type="date" name="to" value={toStr} class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+      </label>
+      <label class="block">
+        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Tipo</span>
+        <select name="type" class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm focus:border-blue-300 focus:bg-white focus:outline-none">
+          <option value="all" selected={typeFilter === "all"}>Todos</option>
+          {Object.entries(typeLabels).map(([k, v]) => (
+            <option value={k} selected={typeFilter === k}>{v.label}</option>
+          ))}
+        </select>
+      </label>
+      <label class="block">
+        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Grupo COFEPRIS</span>
+        <select name="group" class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm focus:border-blue-300 focus:bg-white focus:outline-none">
+          <option value="all" selected={groupFilter === "all"}>Todos</option>
+          <option value="I" selected={groupFilter === "I"}>I · Estupefacientes</option>
+          <option value="II" selected={groupFilter === "II"}>II · Psicotrópicos A</option>
+          <option value="III" selected={groupFilter === "III"}>III · Psicotrópicos B</option>
+          <option value="IV" selected={groupFilter === "IV"}>IV · Antibióticos</option>
+        </select>
+      </label>
+      <div class="flex items-end">
+        <button type="submit" class="rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white">Filtrar</button>
+      </div>
+    </form>
+
+    <div class="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-card">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-neutral-50">
+            <tr class="text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
+              <th class="px-4 py-3 md:px-5">Fecha</th>
+              <th class="px-4 py-3 md:px-5">Tipo</th>
+              <th class="px-4 py-3 md:px-5">Producto</th>
+              <th class="hidden px-4 py-3 md:table-cell md:px-5">Sucursal</th>
+              <th class="hidden px-4 py-3 text-center lg:table-cell lg:px-5">COFEPRIS</th>
+              <th class="px-4 py-3 text-right md:px-5">Cantidad</th>
+              <th class="px-4 py-3 text-right md:px-5">Saldo</th>
+              <th class="hidden px-4 py-3 lg:table-cell lg:px-5">Usuario</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-neutral-100">
+            {movs.map((m) => {
+              const t = typeLabels[m.type] ?? { label: m.type, cls: "bg-neutral-100 text-neutral-600" };
+              return (
+                <tr class="transition hover:bg-blue-50/40">
+                  <td class="px-4 py-3 text-neutral-600 md:px-5">{fmtDate(m.createdAt)}</td>
+                  <td class="px-4 py-3 md:px-5"><span class={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${t.cls}`}>{t.label}</span></td>
+                  <td class="px-4 py-3 md:px-5">
+                    <div class="text-sm font-medium text-neutral-900">{m.product ?? "—"}</div>
+                    <div class="font-mono text-[10px] text-neutral-500">{m.barcode ?? ""}</div>
+                  </td>
+                  <td class="hidden px-4 py-3 text-neutral-600 md:table-cell md:px-5">{m.warehouse ?? "—"}</td>
+                  <td class="hidden px-4 py-3 text-center lg:table-cell lg:px-5">
+                    {m.controlledGroup ? <span class="rounded-full bg-warning-50 px-2 py-0.5 text-[10px] font-bold text-warning-500">{m.controlledGroup}</span> : <span class="text-xs text-neutral-300">—</span>}
+                  </td>
+                  <td class={`px-4 py-3 text-right font-mono font-semibold tabular md:px-5 ${m.quantity < 0 ? "text-danger-500" : "text-success-500"}`}>
+                    {m.quantity > 0 ? "+" : ""}{m.quantity}
+                  </td>
+                  <td class="px-4 py-3 text-right font-mono text-xs tabular text-neutral-700 md:px-5">{m.balanceAfter}</td>
+                  <td class="hidden px-4 py-3 text-neutral-600 lg:table-cell lg:px-5">{m.user ?? "—"}</td>
+                </tr>
+              );
+            })}
+            {movs.length === 0 && (
+              <tr><td colspan="8" class="px-5 py-16 text-center text-sm text-neutral-400">Sin movimientos en el rango seleccionado.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</AppLayout>

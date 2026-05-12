@@ -1,0 +1,151 @@
+---
+export const prerender = false;
+import AppLayout from "../../layouts/AppLayout.astro";
+import { getDb, schema } from "../../lib/db";
+import { and, eq, gte, lte, sql, desc } from "drizzle-orm";
+
+const db = getDb();
+const tenantId = Astro.locals.tenantId;
+
+const today = new Date(); today.setHours(0, 0, 0, 0);
+const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 7);
+
+const fromStr = Astro.url.searchParams.get("from") ?? weekAgo.toISOString().slice(0, 10);
+const toStr = Astro.url.searchParams.get("to") ?? today.toISOString().slice(0, 10);
+const fromTs = new Date(fromStr + "T00:00:00").getTime();
+const toTs = new Date(toStr + "T23:59:59.999").getTime();
+
+const sales = await db
+  .select({
+    id: schema.sales.id,
+    ticketNumber: schema.sales.ticketNumber,
+    createdAt: schema.sales.createdAt,
+    subtotal: schema.sales.subtotal,
+    ivaTotal: schema.sales.ivaTotal,
+    total: schema.sales.total,
+    status: schema.sales.status,
+    cfdiStatus: schema.sales.cfdiStatus,
+    warehouse: schema.warehouses.name,
+    user: schema.users.name,
+  })
+  .from(schema.sales)
+  .leftJoin(schema.warehouses, eq(schema.sales.warehouseId, schema.warehouses.id))
+  .leftJoin(schema.users, eq(schema.sales.userId, schema.users.id))
+  .where(
+    and(
+      eq(schema.sales.tenantId, tenantId),
+      gte(schema.sales.createdAt, new Date(fromTs)),
+      lte(schema.sales.createdAt, new Date(toTs)),
+    ),
+  )
+  .orderBy(desc(schema.sales.createdAt))
+  .limit(500);
+
+const totalsRow = await db
+  .select({
+    n: sql<number>`count(*)`,
+    sum: sql<number>`coalesce(sum(${schema.sales.total}), 0)`,
+  })
+  .from(schema.sales)
+  .where(
+    and(
+      eq(schema.sales.tenantId, tenantId),
+      gte(schema.sales.createdAt, new Date(fromTs)),
+      lte(schema.sales.createdAt, new Date(toTs)),
+    ),
+  );
+const totalCount = totalsRow[0]?.n ?? 0;
+const totalAmount = totalsRow[0]?.sum ?? 0;
+
+const fmt = (n: number) => "$" + n.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtDate = (d: Date | null) =>
+  d ? new Date(d).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" }) : "";
+
+const statusLabel: Record<string, { label: string; cls: string }> = {
+  completed: { label: "Cobrada",   cls: "bg-success-50 text-success-500" },
+  cancelled: { label: "Cancelada", cls: "bg-danger-50 text-danger-500" },
+  draft:     { label: "Borrador",  cls: "bg-neutral-100 text-neutral-500" },
+};
+---
+
+<AppLayout title="Historial de Ventas" activeRoute="historial">
+  <div class="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
+    <header class="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="font-heading text-2xl font-bold text-neutral-900 md:text-3xl">Historial de ventas</h1>
+        <p class="mt-1 text-sm text-neutral-500">
+          {totalCount} {totalCount === 1 ? "venta" : "ventas"} · Total {fmt(totalAmount)}
+        </p>
+      </div>
+    </header>
+
+    <form method="get" class="mb-4 grid gap-3 rounded-2xl border border-neutral-200 bg-white p-4 shadow-card sm:grid-cols-[1fr_1fr_auto]">
+      <label class="block">
+        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Desde</span>
+        <input type="date" name="from" value={fromStr} class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+      </label>
+      <label class="block">
+        <span class="mb-1 block text-xs font-semibold uppercase tracking-wider text-neutral-500">Hasta</span>
+        <input type="date" name="to" value={toStr} class="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm focus:border-blue-300 focus:bg-white focus:outline-none" />
+      </label>
+      <div class="flex items-end gap-2">
+        <button type="submit" class="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white">Filtrar</button>
+        <a href="/app/historial" class="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-600">Limpiar</a>
+      </div>
+    </form>
+
+    <div class="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-card">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-neutral-50">
+            <tr class="text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
+              <th class="px-4 py-3 md:px-5">Ticket</th>
+              <th class="px-4 py-3 md:px-5">Fecha</th>
+              <th class="hidden px-4 py-3 md:table-cell md:px-5">Sucursal</th>
+              <th class="hidden px-4 py-3 lg:table-cell lg:px-5">Cajero</th>
+              <th class="px-4 py-3 text-center md:px-5">Estado</th>
+              <th class="hidden px-4 py-3 text-right md:table-cell md:px-5">Subtotal</th>
+              <th class="hidden px-4 py-3 text-right md:table-cell md:px-5">IVA</th>
+              <th class="px-4 py-3 text-right md:px-5">Total</th>
+              <th class="w-12"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-neutral-100">
+            {sales.map((s) => {
+              const st = statusLabel[s.status ?? "completed"] ?? statusLabel.completed;
+              return (
+                <tr class="transition hover:bg-blue-50/40">
+                  <td class="px-4 py-3 font-mono text-xs text-neutral-700 md:px-5">{s.ticketNumber}</td>
+                  <td class="px-4 py-3 text-neutral-600 md:px-5">{fmtDate(s.createdAt)}</td>
+                  <td class="hidden px-4 py-3 text-neutral-600 md:table-cell md:px-5">{s.warehouse ?? "—"}</td>
+                  <td class="hidden px-4 py-3 text-neutral-600 lg:table-cell lg:px-5">{s.user ?? "—"}</td>
+                  <td class="px-4 py-3 text-center md:px-5">
+                    <span class={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${st.cls}`}>{st.label}</span>
+                  </td>
+                  <td class="hidden px-4 py-3 text-right font-mono text-xs tabular text-neutral-500 md:table-cell md:px-5">{fmt(s.subtotal)}</td>
+                  <td class="hidden px-4 py-3 text-right font-mono text-xs tabular text-neutral-500 md:table-cell md:px-5">{fmt(s.ivaTotal)}</td>
+                  <td class="px-4 py-3 text-right font-mono font-semibold tabular text-neutral-900 md:px-5">{fmt(s.total)}</td>
+                  <td class="px-2 py-3">
+                    <a href={`/app/venta/ticket/${s.id}`} class="rounded p-1 text-neutral-400 transition hover:bg-blue-50 hover:text-brand-blue" aria-label="Ver ticket">
+                      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    </a>
+                  </td>
+                </tr>
+              );
+            })}
+            {sales.length === 0 && (
+              <tr>
+                <td colspan="9" class="px-5 py-16 text-center text-sm text-neutral-400">
+                  Sin ventas en el rango seleccionado.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</AppLayout>
