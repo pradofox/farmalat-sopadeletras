@@ -1,0 +1,217 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const features = [
+  { title: "Punto de venta", desc: "Cobro rápido con escáner de código de barras, atajos de teclado y modo offline." },
+  { title: "Inventario en tiempo real", desc: "Existencias, mínimos y máximos por sucursal. Alertas de caducidad y stock bajo." },
+  { title: "Facturación CFDI 4.0", desc: "Tickets convertibles a factura. Facturación global al cierre del día. Sin PAC complicado." },
+  { title: "Reportes COFEPRIS", desc: "Libro de control de medicamentos controlados con el formato oficial. Listo para auditoría." },
+  { title: "Multi-sucursal", desc: "Traslados, requisiciones y órdenes entre almacenes. Un panel para todas tus farmacias." },
+  { title: "Soporte humano", desc: "Hablas con alguien que entiende de farmacia, no un chatbot. 15 años de experiencia." },
+];
+---
+
+<BaseLayout>
+  <main>
+    <!-- ============================================================
+         HERO
+         ============================================================ -->
+    <section class="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-800 to-blue-900 text-white">
+      <div class="absolute inset-0 opacity-10" aria-hidden="true">
+        <svg class="absolute -right-20 -top-20 h-[600px] w-[600px]" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="white" />
+        </svg>
+      </div>
+
+      <header class="relative mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
+        <img src="/brand/farmalat-lockup-white.svg" alt="FarmaLat" class="h-9" />
+        <nav class="hidden items-center gap-8 text-sm font-medium md:flex">
+          <a href="#features" class="text-white/80 transition hover:text-white">Funciones</a>
+          <a href="#pricing" class="text-white/80 transition hover:text-white">Precios</a>
+          <a
+            href="#demo"
+            class="rounded-lg bg-orange-500 px-4 py-2 font-semibold text-white shadow-md transition hover:bg-orange-600"
+          >
+            Solicitar demo
+          </a>
+        </nav>
+      </header>
+
+      <div class="relative mx-auto max-w-7xl px-6 pb-24 pt-12 md:pt-20">
+        <p class="mb-4 text-sm font-semibold uppercase tracking-wider text-brand-orange-light">
+          Sistema de farmacia · Hecho en México
+        </p>
+        <h1 class="font-heading text-5xl font-extrabold leading-tight tracking-tight md:text-7xl">
+          Todo lo que tu farmacia<br />necesita en un solo sistema.
+        </h1>
+        <p class="mt-6 max-w-2xl text-lg text-white/80 md:text-xl">
+          Punto de venta, inventario, CFDI 4.0, control COFEPRIS y reportes en una sola plataforma web. Sin instalar nada.
+        </p>
+
+        <div class="mt-10 flex flex-wrap items-center gap-4">
+          <a
+            href="#demo"
+            class="rounded-xl bg-orange-500 px-6 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-orange-600 hover:shadow-xl"
+          >
+            Agendar una llamada
+          </a>
+          <a
+            href="#features"
+            class="rounded-xl border-2 border-white/30 bg-white/5 px-6 py-4 text-base font-semibold backdrop-blur transition hover:bg-white/10"
+          >
+            Ver funciones
+          </a>
+        </div>
+
+        <div class="mt-16 flex flex-wrap items-center gap-x-10 gap-y-4 text-sm text-white/70">
+          <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-brand-green"></span>
+            <span>Funciona con tu escáner actual</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-brand-green"></span>
+            <span>Migración asistida desde tu sistema</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-brand-green"></span>
+            <span>Soporte humano en español</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         FEATURES
+         ============================================================ -->
+    <section id="features" class="bg-white py-24">
+      <div class="mx-auto max-w-7xl px-6">
+        <div class="mb-16 max-w-2xl">
+          <p class="mb-3 text-sm font-semibold uppercase tracking-wider text-brand-blue">
+            Funciones
+          </p>
+          <h2 class="font-heading text-4xl font-bold text-neutral-900 md:text-5xl">
+            Pensado por farmacéuticos.<br />Construido por LAATEC.
+          </h2>
+          <p class="mt-4 text-lg text-neutral-600">
+            15 años operando software para profesionales de la salud en México. Esta vez lo hicimos para tu mostrador.
+          </p>
+        </div>
+
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {features.map((f) => (
+            <article class="rounded-2xl border border-neutral-200 bg-neutral-50 p-7 transition hover:border-blue-300 hover:bg-blue-50">
+              <div class="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-brand-blue">
+                <span class="font-heading text-lg font-bold text-white">F</span>
+              </div>
+              <h3 class="font-heading text-xl font-bold text-neutral-900">{f.title}</h3>
+              <p class="mt-2 text-sm leading-relaxed text-neutral-600">{f.desc}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PRICING
+         ============================================================ -->
+    <section id="pricing" class="bg-neutral-50 py-24">
+      <div class="mx-auto max-w-4xl px-6 text-center">
+        <p class="mb-3 text-sm font-semibold uppercase tracking-wider text-brand-blue">
+          Precios
+        </p>
+        <h2 class="font-heading text-4xl font-bold text-neutral-900 md:text-5xl">
+          Un solo plan, sin sorpresas.
+        </h2>
+        <p class="mx-auto mt-4 max-w-2xl text-lg text-neutral-600">
+          Pensado para farmacias chicas y medianas que no quieren pelearse con la tecnología.
+        </p>
+
+        <div class="mt-12 rounded-3xl border-2 border-brand-blue bg-white p-10 text-left shadow-lg">
+          <div class="flex flex-wrap items-start justify-between gap-6">
+            <div>
+              <h3 class="font-heading text-2xl font-bold text-neutral-900">Plan Farmacia</h3>
+              <p class="mt-1 text-sm text-neutral-500">Por sucursal, sin cuotas de alta</p>
+            </div>
+            <div class="text-right">
+              <div class="font-mono text-5xl font-bold tabular text-brand-blue">$2,000</div>
+              <div class="text-sm text-neutral-500">MXN al mes</div>
+            </div>
+          </div>
+
+          <ul class="mt-8 space-y-3 text-sm text-neutral-700">
+            <li class="flex gap-3">
+              <span class="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success-50 text-success-500">✓</span>
+              <span>Punto de venta ilimitado, usuarios ilimitados</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success-50 text-success-500">✓</span>
+              <span>Inventario multi-almacén, transferencias entre sucursales</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success-50 text-success-500">✓</span>
+              <span>CFDI 4.0 (timbrado se cobra aparte, paquetes desde $0.50 MXN cada uno)</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success-50 text-success-500">✓</span>
+              <span>Reportes COFEPRIS, ventas, comisiones, mínimos y máximos</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success-50 text-success-500">✓</span>
+              <span>Migración de catálogo asistida desde tu sistema actual</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-0.5 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success-50 text-success-500">✓</span>
+              <span>Soporte humano por WhatsApp en horario hábil</span>
+            </li>
+          </ul>
+
+          <a
+            href="#demo"
+            class="mt-10 block rounded-xl bg-brand-blue px-6 py-4 text-center text-base font-semibold text-white shadow-md transition hover:bg-blue-800"
+          >
+            Hablar con ventas
+          </a>
+        </div>
+
+        <p class="mt-6 text-sm text-neutral-500">
+          Primeras 8 semanas gratis para farmacias piloto. Sin compromiso, sin tarjeta.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         CTA + FOOTER
+         ============================================================ -->
+    <section id="demo" class="bg-brand-blue py-20 text-white">
+      <div class="mx-auto max-w-4xl px-6 text-center">
+        <h2 class="font-heading text-3xl font-bold md:text-5xl">
+          Transformemos tu farmacia.
+        </h2>
+        <p class="mx-auto mt-4 max-w-xl text-lg text-white/80">
+          Agenda una llamada de 30 minutos y te mostramos cómo se ve operando en tu mostrador.
+        </p>
+        <a
+          href="mailto:hola@sopadeletras.art?subject=Demo%20de%20FarmaLat"
+          class="mt-8 inline-block rounded-xl bg-orange-500 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-orange-600"
+        >
+          Solicitar demo
+        </a>
+      </div>
+    </section>
+
+    <footer class="bg-neutral-900 py-10 text-sm text-neutral-400">
+      <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-6 px-6">
+        <div class="flex items-center gap-4">
+          <img src="/brand/farmalat-isotipo-white.svg" alt="" class="h-10 w-10" />
+          <div>
+            <div class="font-heading font-bold text-white">FarmaLat</div>
+            <div>Un sistema de <a href="https://laatec.com" class="text-brand-blue-light hover:text-white">Laboratory & Technology</a></div>
+          </div>
+        </div>
+        <div>
+          <a href="mailto:hola@sopadeletras.art" class="hover:text-white">hola@sopadeletras.art</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+</BaseLayout>

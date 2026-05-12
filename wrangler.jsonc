@@ -1,0 +1,28 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"compatibility_date": "2026-05-12",
+	"compatibility_flags": ["global_fetch_strictly_public", "nodejs_compat"],
+	"name": "farmalat-sopadeletras",
+	"account_id": "79b48e78b9db791957b966c527f8039a",
+	"main": "@astrojs/cloudflare/entrypoints/server",
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "farmalat-db",
+			"database_id": "8f12a2be-4836-4de7-a530-f85e9136bf77"
+		}
+	],
+	"routes": [
+		{
+			"pattern": "farmalat.sopadeletras.art",
+			"custom_domain": true
+		}
+	]
+}

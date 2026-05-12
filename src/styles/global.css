@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+/*
+ * FarmaLat Design System
+ * Basado en brandbook LAATEC 2021 + extensiones para POS de farmacia.
+ * Tokens semánticos para Tailwind v4.
+ */
+@theme {
+  /* ============================================================
+     COLORES DE MARCA (oficial LAATEC, intocables)
+     ============================================================ */
+  --color-brand-blue: #10069f;
+  --color-brand-orange: #ff7500;
+  --color-brand-green: #79d97c;
+  --color-brand-blue-light: #a7c6ed;
+  --color-brand-orange-light: #f8ad6d;
+
+  /* ============================================================
+     ESCALA AZUL DERIVADA - para profundidad de UI
+     ============================================================ */
+  --color-blue-50:  #eff0fb;
+  --color-blue-100: #d6d9f4;
+  --color-blue-200: #adb3e8;
+  --color-blue-300: #7c84d8;
+  --color-blue-400: #525bc8;
+  --color-blue-500: #3a41c8;
+  --color-blue-600: #1d1bb5;
+  --color-blue-700: #10069f;  /* === brand === */
+  --color-blue-800: #0c0578;
+  --color-blue-900: #080451;
+
+  /* ============================================================
+     ESCALA NARANJA - CTAs especiales, badges
+     ============================================================ */
+  --color-orange-50:  #fff3e8;
+  --color-orange-100: #ffe0c2;
+  --color-orange-200: #ffc794;
+  --color-orange-300: #ffa961;
+  --color-orange-400: #ff8c2e;
+  --color-orange-500: #ff7500;  /* === brand === */
+  --color-orange-600: #e66800;
+  --color-orange-700: #b85400;
+  --color-orange-800: #8a3f00;
+
+  /* ============================================================
+     NEUTRALES - lo que el brandbook no cubre
+     ============================================================ */
+  --color-neutral-0:   #ffffff;
+  --color-neutral-50:  #fafafb;
+  --color-neutral-100: #f1f2f6;
+  --color-neutral-200: #e3e5ec;
+  --color-neutral-300: #c7cad6;
+  --color-neutral-400: #9ba0b0;
+  --color-neutral-500: #6b7184;
+  --color-neutral-600: #4d5266;
+  --color-neutral-700: #3d4254;
+  --color-neutral-800: #262936;
+  --color-neutral-900: #1a1c26;
+
+  /* ============================================================
+     SEMÁNTICOS - críticos en POS
+     ============================================================ */
+  --color-success-500: #2e7d32;
+  --color-success-50:  #e8f5e9;
+  --color-warning-500: #b85400;
+  --color-warning-50:  #fff3e8;
+  --color-danger-500:  #c62828;
+  --color-danger-50:   #ffebee;
+  --color-info-500:    #10069f;
+  --color-info-50:     #eff0fb;
+
+  /* ============================================================
+     TIPOGRAFÍA
+     ============================================================ */
+  --font-heading: "Nunito", system-ui, sans-serif;
+  --font-body:    "Inter", system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", "IBM Plex Mono", monospace;
+
+  /* ============================================================
+     RADIOS y SOMBRAS
+     ============================================================ */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+
+  --shadow-card: 0 1px 2px 0 rgb(16 6 159 / 0.04), 0 1px 3px 0 rgb(16 6 159 / 0.06);
+  --shadow-popover: 0 4px 12px -2px rgb(16 6 159 / 0.08), 0 8px 24px -4px rgb(16 6 159 / 0.10);
+}
+
+/* ============================================================
+   Base styles
+   ============================================================ */
+html {
+  font-family: var(--font-body);
+  color: var(--color-neutral-900);
+  background: var(--color-neutral-50);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Focus visible accesible */
+*:focus-visible {
+  outline: 2px solid var(--color-blue-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Tabular nums para tablas de precios */
+.tabular { font-variant-numeric: tabular-nums; }
