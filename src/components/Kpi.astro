@@ -1,0 +1,19 @@
+---
+interface Props {
+  label: string;
+  value: string;
+  primary?: boolean;
+  mono?: boolean;
+}
+const { label, value, primary, mono } = Astro.props;
+const valueCls = [
+  "mt-1 text-2xl font-bold tabular",
+  mono ? "font-mono" : "font-heading",
+  primary ? "text-brand-blue" : "text-neutral-900",
+].join(" ");
+---
+
+<article class="rounded-2xl border border-neutral-200 bg-white p-5 shadow-card">
+  <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">{label}</div>
+  <div class={valueCls}>{value}</div>
+</article>

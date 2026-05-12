@@ -1,0 +1,124 @@
+---
+export const prerender = false;
+import AppLayout from "../../../layouts/AppLayout.astro";
+import Kpi from "../../../components/Kpi.astro";
+import { getDb, schema } from "../../../lib/db";
+import { and, eq, sql } from "drizzle-orm";
+
+const db = getDb();
+const tenantId = Astro.locals.tenantId;
+
+const warehouses = await db
+  .select({ id: schema.warehouses.id, name: schema.warehouses.name })
+  .from(schema.warehouses)
+  .where(eq(schema.warehouses.tenantId, tenantId));
+
+const warehouseId = Number(Astro.url.searchParams.get("w") ?? warehouses[0]?.id ?? 0);
+
+const rows = await db
+  .select({
+    productId: schema.products.id,
+    name: schema.products.name,
+    barcode: schema.products.barcode,
+    department: schema.departments.name,
+    quantity: schema.inventory.quantity,
+    min: schema.inventory.minQuantity,
+    max: schema.inventory.maxQuantity,
+    cost: schema.inventory.lastCost,
+    suggestedOrder: sql<number>`${schema.inventory.maxQuantity} - ${schema.inventory.quantity}`,
+  })
+  .from(schema.inventory)
+  .leftJoin(schema.products, eq(schema.products.id, schema.inventory.productId))
+  .leftJoin(schema.departments, eq(schema.departments.id, schema.products.departmentId))
+  .where(
+    and(
+      eq(schema.inventory.tenantId, tenantId),
+      eq(schema.inventory.warehouseId, warehouseId),
+      sql`${schema.inventory.quantity} <= ${schema.inventory.minQuantity}`,
+    ),
+  )
+  .orderBy(schema.products.name);
+
+const zero = rows.filter((r) => (r.quantity ?? 0) === 0);
+const low = rows.filter((r) => (r.quantity ?? 0) > 0);
+const estCost = rows.reduce((a, r) => a + Number(r.suggestedOrder ?? 0) * Number(r.cost ?? 0), 0);
+
+const fmt = (n: number) => "$" + Number(n).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+---
+
+<AppLayout title="Mínimos y máximos" activeRoute="min-max">
+  <div class="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
+    <header class="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="font-heading text-2xl font-bold text-neutral-900 md:text-3xl">Mínimos y máximos</h1>
+        <p class="mt-1 text-sm text-neutral-500">Productos que necesitan reabasto en la sucursal seleccionada</p>
+      </div>
+      <button type="button" class="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-600" disabled>
+        Generar requisición a proveedor
+        <span class="ml-2 text-[10px] uppercase tracking-wider opacity-70">próximamente</span>
+      </button>
+    </header>
+
+    <form method="get" class="mb-6 inline-flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-3 shadow-card">
+      <label class="flex items-center gap-2 text-sm">
+        <span class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Sucursal</span>
+        <select name="w" class="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm focus:border-blue-300 focus:bg-white focus:outline-none">
+          {warehouses.map((w) => (<option value={w.id} selected={w.id === warehouseId}>{w.name}</option>))}
+        </select>
+      </label>
+      <button type="submit" class="rounded-lg bg-brand-blue px-3 py-1.5 text-sm font-semibold text-white">Aplicar</button>
+    </form>
+
+    <section class="mb-6 grid gap-4 md:grid-cols-3">
+      <Kpi label="Agotados" value={String(zero.length)} />
+      <Kpi label="Bajo mínimo" value={String(low.length)} />
+      <Kpi label="Estimación reabasto a costo" value={fmt(estCost)} mono primary />
+    </section>
+
+    <div class="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-card">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-neutral-50">
+            <tr class="text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
+              <th class="px-4 py-3 md:px-5">Producto</th>
+              <th class="hidden px-4 py-3 md:table-cell md:px-5">Departamento</th>
+              <th class="px-4 py-3 text-right md:px-5">Existencia</th>
+              <th class="px-4 py-3 text-right md:px-5">Mín</th>
+              <th class="px-4 py-3 text-right md:px-5">Máx</th>
+              <th class="px-4 py-3 text-right md:px-5">Sugerencia</th>
+              <th class="hidden px-4 py-3 text-right md:table-cell md:px-5">Costo unit.</th>
+              <th class="hidden px-4 py-3 text-right lg:table-cell lg:px-5">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-neutral-100">
+            {rows.map((r) => {
+              const isZero = Number(r.quantity ?? 0) === 0;
+              const order = Number(r.suggestedOrder ?? 0);
+              const subtotal = order * Number(r.cost ?? 0);
+              return (
+                <tr class="transition hover:bg-blue-50/30">
+                  <td class="px-4 py-3 md:px-5">
+                    <div class="font-medium text-neutral-900">{r.name}</div>
+                    <div class="font-mono text-[10px] text-neutral-500">{r.barcode ?? ""}</div>
+                  </td>
+                  <td class="hidden px-4 py-3 text-neutral-600 md:table-cell md:px-5">{r.department ?? "—"}</td>
+                  <td class={`px-4 py-3 text-right font-mono font-bold tabular md:px-5 ${isZero ? "text-danger-500" : "text-warning-500"}`}>{r.quantity ?? 0}</td>
+                  <td class="px-4 py-3 text-right font-mono text-xs tabular text-neutral-500 md:px-5">{r.min ?? 0}</td>
+                  <td class="px-4 py-3 text-right font-mono text-xs tabular text-neutral-500 md:px-5">{r.max ?? 0}</td>
+                  <td class="px-4 py-3 text-right font-mono font-semibold tabular text-brand-blue md:px-5">+{order}</td>
+                  <td class="hidden px-4 py-3 text-right font-mono text-xs tabular text-neutral-500 md:table-cell md:px-5">{fmt(Number(r.cost ?? 0))}</td>
+                  <td class="hidden px-4 py-3 text-right font-mono tabular text-neutral-700 lg:table-cell lg:px-5">{fmt(subtotal)}</td>
+                </tr>
+              );
+            })}
+            {rows.length === 0 && (
+              <tr><td colspan="8" class="px-5 py-16 text-center text-sm text-success-500">
+                ¡Todo el inventario está por encima del mínimo!
+              </td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</AppLayout>
