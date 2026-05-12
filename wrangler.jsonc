@@ -19,6 +19,12 @@
 			"database_id": "8f12a2be-4836-4de7-a530-f85e9136bf77"
 		}
 	],
+	"r2_buckets": [
+		{
+			"binding": "RECEIPTS",
+			"bucket_name": "farmalat-receipts"
+		}
+	],
 	"routes": [
 		{
 			"pattern": "farmalat.sopadeletras.art",

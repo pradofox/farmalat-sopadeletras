@@ -5,6 +5,7 @@ type Runtime = import("@astrojs/cloudflare").Runtime<{
   DB: D1Database;
   SESSION: KVNamespace;
   ASSETS: Fetcher;
+  RECEIPTS: R2Bucket;
 }>;
 
 declare namespace App {

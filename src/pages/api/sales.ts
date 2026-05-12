@@ -30,6 +30,7 @@ interface IncomingPayment {
 interface SaleBody {
   warehouseId: number;
   customerId?: number;
+  prescriptionId?: number;
   items: IncomingItem[];
   payments: IncomingPayment[];
 }
@@ -165,6 +166,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         balanceAfter: newQty,
         unitCost: 0,
         saleId: sale.id,
+        prescriptionId: body.prescriptionId ?? null,
         userId,
       });
     }

@@ -160,19 +160,48 @@ export default function POS({ warehouseId = 1 }: { warehouseId?: number }) {
     setPaymentOpen(true);
   }
 
+  // Hay productos controlados que requieren receta?
+  const needsPrescription = useMemo(
+    () => items.some((it) => it.requiresPrescription || (it.controlledGroup && ["I", "II", "III", "IV"].includes(it.controlledGroup))),
+    [items],
+  );
+  const [rxFile, setRxFile] = useState<File | null>(null);
+  const [rxPatient, setRxPatient] = useState("");
+  const [rxDoctor, setRxDoctor] = useState("");
+
   async function pay() {
     if (busy) return;
     if (payMethod === "cash" && parseFloat(received || "0") < total) {
       flashToast("Recibido insuficiente");
       return;
     }
+    if (needsPrescription && !rxPatient.trim()) {
+      flashToast("Captura nombre del paciente para la receta");
+      return;
+    }
     setBusy(true);
     try {
+      let prescriptionId: number | null = null;
+      if (needsPrescription) {
+        const fd = new FormData();
+        fd.append("patientName", rxPatient);
+        if (rxDoctor) fd.append("doctorId", rxDoctor);
+        const hasRetentionItem = items.some((it) => it.controlledGroup === "II");
+        if (hasRetentionItem) fd.append("retained", "1");
+        fd.append("type", "physical");
+        if (rxFile) fd.append("file", rxFile);
+        const rxRes = await fetch("/api/prescriptions", { method: "POST", body: fd });
+        const rxData = await rxRes.json();
+        if (!rxData.ok) { flashToast("Error guardando receta"); setBusy(false); return; }
+        prescriptionId = rxData.prescriptionId;
+      }
+
       const res = await fetch("/api/sales", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           warehouseId,
+          prescriptionId,
           items: items.map((it) => ({
             productId: it.productId,
             quantity: it.quantity,
@@ -423,6 +452,33 @@ export default function POS({ warehouseId = 1 }: { warehouseId?: number }) {
                     <span className="font-mono text-lg font-bold tabular text-success-500">{fmt(change)}</span>
                   </div>
                 )}
+              </div>
+            )}
+
+            {needsPrescription && (
+              <div className="mt-4 rounded-lg border border-warning-500 bg-warning-50 p-3">
+                <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-warning-500">
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 9v4m0 4h.01M4.93 19h14.14a2 2 0 001.74-3l-7.07-12a2 2 0 00-3.48 0L3.19 16a2 2 0 001.74 3z" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  <span>Requiere receta médica</span>
+                </div>
+                <div className="space-y-2">
+                  <input
+                    value={rxPatient}
+                    onChange={(e) => setRxPatient(e.target.value)}
+                    placeholder="Nombre del paciente *"
+                    className="w-full rounded-lg border border-warning-500/40 bg-white px-3 py-2 text-sm focus:border-warning-500 focus:outline-none"
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={(e) => setRxFile(e.target.files?.[0] ?? null)}
+                    className="block w-full text-xs text-neutral-600 file:mr-2 file:rounded file:border-0 file:bg-warning-500 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
+                  />
+                  <p className="text-[10px] text-neutral-500">
+                    Foto opcional. Recetas de Grupo II se retienen 5 años.
+                  </p>
+                </div>
               </div>
             )}
 
