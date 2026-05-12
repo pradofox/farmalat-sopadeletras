@@ -317,6 +317,99 @@ export const inventoryMovements = sqliteTable("inventory_movements", {
 ]);
 
 // ============================================================
+// SUPPLIERS - proveedores (Casa Saba, Nadro, Marzam, etc.)
+// ============================================================
+export const suppliers = sqliteTable("suppliers", {
+  id: id(),
+  tenantId: integer("tenant_id").notNull().references(() => tenants.id),
+  name: text("name").notNull(),
+  contactName: text("contact_name"),
+  email: text("email"),
+  phone: text("phone"),
+  rfc: text("rfc"),
+  address: text("address"),
+  paymentTerms: text("payment_terms"),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
+}, (t) => [
+  index("suppliers_tenant_idx").on(t.tenantId),
+]);
+
+// ============================================================
+// SUPPLIER_ORDERS - ordenes de compra
+// ============================================================
+export const supplierOrders = sqliteTable("supplier_orders", {
+  id: id(),
+  tenantId: integer("tenant_id").notNull().references(() => tenants.id),
+  supplierId: integer("supplier_id").notNull().references(() => suppliers.id),
+  warehouseId: integer("warehouse_id").notNull().references(() => warehouses.id),
+  orderNumber: text("order_number").notNull(),
+  status: text("status", { enum: ["draft", "sent", "partial", "received", "cancelled"] }).notNull().default("draft"),
+  subtotal: real("subtotal").notNull().default(0),
+  ivaTotal: real("iva_total").notNull().default(0),
+  total: real("total").notNull().default(0),
+  expectedAt: ts("expected_at"),
+  sentAt: ts("sent_at"),
+  receivedAt: ts("received_at"),
+  notes: text("notes"),
+  userId: integer("user_id").references(() => users.id),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
+}, (t) => [
+  index("supplier_orders_tenant_idx").on(t.tenantId, t.createdAt),
+]);
+
+// ============================================================
+// SUPPLIER_ORDER_ITEMS - lineas de orden de compra
+// ============================================================
+export const supplierOrderItems = sqliteTable("supplier_order_items", {
+  id: id(),
+  orderId: integer("order_id").notNull().references(() => supplierOrders.id),
+  productId: integer("product_id").notNull().references(() => products.id),
+  productName: text("product_name").notNull(),
+  quantityOrdered: real("quantity_ordered").notNull(),
+  quantityReceived: real("quantity_received").notNull().default(0),
+  unitCost: real("unit_cost").notNull(),
+  ivaPct: real("iva_pct").notNull().default(0),
+  lot: text("lot"),
+  expiryDate: ts("expiry_date"),
+}, (t) => [
+  index("supplier_order_items_order_idx").on(t.orderId),
+]);
+
+// ============================================================
+// TRANSFERS - traslados entre sucursales
+// ============================================================
+export const transfers = sqliteTable("transfers", {
+  id: id(),
+  tenantId: integer("tenant_id").notNull().references(() => tenants.id),
+  fromWarehouseId: integer("from_warehouse_id").notNull().references(() => warehouses.id),
+  toWarehouseId: integer("to_warehouse_id").notNull().references(() => warehouses.id),
+  transferNumber: text("transfer_number").notNull(),
+  status: text("status", { enum: ["draft", "sent", "received", "cancelled"] }).notNull().default("draft"),
+  sentAt: ts("sent_at"),
+  receivedAt: ts("received_at"),
+  notes: text("notes"),
+  userId: integer("user_id").references(() => users.id),
+  createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
+}, (t) => [
+  index("transfers_tenant_idx").on(t.tenantId, t.createdAt),
+]);
+
+// ============================================================
+// TRANSFER_ITEMS - lineas de traslado
+// ============================================================
+export const transferItems = sqliteTable("transfer_items", {
+  id: id(),
+  transferId: integer("transfer_id").notNull().references(() => transfers.id),
+  productId: integer("product_id").notNull().references(() => products.id),
+  productName: text("product_name").notNull(),
+  quantity: real("quantity").notNull(),
+  lot: text("lot"),
+}, (t) => [
+  index("transfer_items_transfer_idx").on(t.transferId),
+]);
+
+// ============================================================
 // AUDIT_LOG - bitácora de cambios críticos
 // ============================================================
 export const auditLog = sqliteTable("audit_log", {

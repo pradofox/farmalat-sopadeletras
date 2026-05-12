@@ -232,6 +232,61 @@ CREATE TABLE `sales` (
 CREATE INDEX `sales_tenant_date_idx` ON `sales` (`tenant_id`,`created_at`);--> statement-breakpoint
 CREATE INDEX `sales_warehouse_idx` ON `sales` (`warehouse_id`);--> statement-breakpoint
 CREATE UNIQUE INDEX `sales_ticket_idx` ON `sales` (`tenant_id`,`warehouse_id`,`ticket_number`);--> statement-breakpoint
+CREATE TABLE `supplier_order_items` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`order_id` integer NOT NULL,
+	`product_id` integer NOT NULL,
+	`product_name` text NOT NULL,
+	`quantity_ordered` real NOT NULL,
+	`quantity_received` real DEFAULT 0 NOT NULL,
+	`unit_cost` real NOT NULL,
+	`iva_pct` real DEFAULT 0 NOT NULL,
+	`lot` text,
+	`expiry_date` integer,
+	FOREIGN KEY (`order_id`) REFERENCES `supplier_orders`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE INDEX `supplier_order_items_order_idx` ON `supplier_order_items` (`order_id`);--> statement-breakpoint
+CREATE TABLE `supplier_orders` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`tenant_id` integer NOT NULL,
+	`supplier_id` integer NOT NULL,
+	`warehouse_id` integer NOT NULL,
+	`order_number` text NOT NULL,
+	`status` text DEFAULT 'draft' NOT NULL,
+	`subtotal` real DEFAULT 0 NOT NULL,
+	`iva_total` real DEFAULT 0 NOT NULL,
+	`total` real DEFAULT 0 NOT NULL,
+	`expected_at` integer,
+	`sent_at` integer,
+	`received_at` integer,
+	`notes` text,
+	`user_id` integer,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`supplier_id`) REFERENCES `suppliers`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`warehouse_id`) REFERENCES `warehouses`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE INDEX `supplier_orders_tenant_idx` ON `supplier_orders` (`tenant_id`,`created_at`);--> statement-breakpoint
+CREATE TABLE `suppliers` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`tenant_id` integer NOT NULL,
+	`name` text NOT NULL,
+	`contact_name` text,
+	`email` text,
+	`phone` text,
+	`rfc` text,
+	`address` text,
+	`payment_terms` text,
+	`active` integer DEFAULT true NOT NULL,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE INDEX `suppliers_tenant_idx` ON `suppliers` (`tenant_id`);--> statement-breakpoint
 CREATE TABLE `tenants` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`slug` text NOT NULL,
@@ -246,6 +301,37 @@ CREATE TABLE `tenants` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `tenants_slug_unique` ON `tenants` (`slug`);--> statement-breakpoint
+CREATE TABLE `transfer_items` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`transfer_id` integer NOT NULL,
+	`product_id` integer NOT NULL,
+	`product_name` text NOT NULL,
+	`quantity` real NOT NULL,
+	`lot` text,
+	FOREIGN KEY (`transfer_id`) REFERENCES `transfers`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE INDEX `transfer_items_transfer_idx` ON `transfer_items` (`transfer_id`);--> statement-breakpoint
+CREATE TABLE `transfers` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`tenant_id` integer NOT NULL,
+	`from_warehouse_id` integer NOT NULL,
+	`to_warehouse_id` integer NOT NULL,
+	`transfer_number` text NOT NULL,
+	`status` text DEFAULT 'draft' NOT NULL,
+	`sent_at` integer,
+	`received_at` integer,
+	`notes` text,
+	`user_id` integer,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`from_warehouse_id`) REFERENCES `warehouses`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`to_warehouse_id`) REFERENCES `warehouses`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE INDEX `transfers_tenant_idx` ON `transfers` (`tenant_id`,`created_at`);--> statement-breakpoint
 CREATE TABLE `units` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`tenant_id` integer NOT NULL,

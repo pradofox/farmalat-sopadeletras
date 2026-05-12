@@ -16,13 +16,22 @@ const initials = sessionName.split(" ").map((p) => p[0]).slice(0, 2).join("").to
 
 let pharmacyName = "Farmacia";
 let warehouseLabel = "Matriz";
+let warehouses: { id: number; name: string }[] = [];
+let activeWarehouseId = 0;
+const activeWhCookie = Astro.cookies.get("fl_warehouse")?.value;
 if (sessionAny?.tenantId) {
   try {
     const db = getDb();
     const [t] = await db.select({ name: schema.tenants.name }).from(schema.tenants).where(eq(schema.tenants.id, sessionAny.tenantId)).limit(1);
     if (t) pharmacyName = t.name;
-    const [w] = await db.select({ name: schema.warehouses.name }).from(schema.warehouses).where(eq(schema.warehouses.tenantId, sessionAny.tenantId)).limit(1);
-    if (w) warehouseLabel = w.name;
+    warehouses = await db.select({ id: schema.warehouses.id, name: schema.warehouses.name })
+      .from(schema.warehouses).where(eq(schema.warehouses.tenantId, sessionAny.tenantId));
+    if (warehouses.length > 0) {
+      const fromCookie = activeWhCookie ? warehouses.find((w) => w.id === Number(activeWhCookie)) : null;
+      const active = fromCookie ?? warehouses[0];
+      activeWarehouseId = active.id;
+      warehouseLabel = active.name;
+    }
   } catch {}
 }
 
@@ -220,13 +229,21 @@ const icons: Record<string, string> = {
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <button
-              type="button"
-              class="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-600 hover:bg-neutral-100 md:inline-flex"
-              title="Cambiar almacén"
-            >
-              📍 Matriz
-            </button>
+            {warehouses.length > 1 ? (
+              <select
+                id="warehouse-select"
+                class="hidden rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 focus:border-blue-300 focus:outline-none md:inline-block"
+                title="Cambiar almacén activo"
+              >
+                {warehouses.map((w) => (
+                  <option value={w.id} selected={w.id === activeWarehouseId}>📍 {w.name}</option>
+                ))}
+              </select>
+            ) : (
+              <span class="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-600 md:inline-block">
+                📍 {warehouseLabel}
+              </span>
+            )}
             <a
               href="/app/venta"
               class="rounded-lg bg-orange-500 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 md:px-4"
@@ -269,6 +286,14 @@ const icons: Record<string, string> = {
           await fetch("/api/auth/logout", { method: "POST" });
         } catch {}
         window.location.href = "/login";
+      });
+
+      // Warehouse selector
+      const whSelect = document.getElementById("warehouse-select");
+      whSelect?.addEventListener("change", (e) => {
+        const id = e.target.value;
+        document.cookie = `fl_warehouse=${id}; Path=/; Max-Age=2592000; SameSite=Lax`;
+        window.location.reload();
       });
     </script>
   </body>

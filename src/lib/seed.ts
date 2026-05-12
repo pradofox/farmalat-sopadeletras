@@ -87,6 +87,13 @@ export async function seed(db: DB) {
     commissionPct: 5,
   });
 
+  // 7b) Proveedores demo
+  await db.insert(schema.suppliers).values([
+    { tenantId: tenant.id, name: "Casa Saba", contactName: "Atención clientes", email: "ventas@casasaba.com.mx", phone: "55-5267-8800", paymentTerms: "Crédito 30 días" },
+    { tenantId: tenant.id, name: "Nadro",      contactName: "Atención clientes", email: "ventas@nadro.com.mx",   phone: "55-1500-2300", paymentTerms: "Crédito 30 días" },
+    { tenantId: tenant.id, name: "Marzam",     contactName: "Atención clientes", email: "contacto@marzam.com.mx",phone: "55-5448-3000", paymentTerms: "Crédito 15 días" },
+  ]);
+
   // 8) Productos demo (20 medicamentos comunes + algunos no medicamentos)
   const products: Array<typeof schema.products.$inferInsert> = [
     // Farmacia general (IVA 0% medicinas de patente)

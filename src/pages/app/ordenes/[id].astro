@@ -1,0 +1,174 @@
+---
+export const prerender = false;
+import AppLayout from "../../../layouts/AppLayout.astro";
+import { getDb, schema } from "../../../lib/db";
+import { and, eq } from "drizzle-orm";
+
+const db = getDb();
+const tenantId = Astro.locals.tenantId;
+const id = Number(Astro.params.id);
+
+const [order] = await db
+  .select({
+    id: schema.supplierOrders.id,
+    orderNumber: schema.supplierOrders.orderNumber,
+    status: schema.supplierOrders.status,
+    subtotal: schema.supplierOrders.subtotal,
+    ivaTotal: schema.supplierOrders.ivaTotal,
+    total: schema.supplierOrders.total,
+    expectedAt: schema.supplierOrders.expectedAt,
+    sentAt: schema.supplierOrders.sentAt,
+    receivedAt: schema.supplierOrders.receivedAt,
+    notes: schema.supplierOrders.notes,
+    createdAt: schema.supplierOrders.createdAt,
+    supplier: schema.suppliers.name,
+    supplierEmail: schema.suppliers.email,
+    warehouse: schema.warehouses.name,
+  })
+  .from(schema.supplierOrders)
+  .leftJoin(schema.suppliers, eq(schema.supplierOrders.supplierId, schema.suppliers.id))
+  .leftJoin(schema.warehouses, eq(schema.supplierOrders.warehouseId, schema.warehouses.id))
+  .where(and(eq(schema.supplierOrders.id, id), eq(schema.supplierOrders.tenantId, tenantId)))
+  .limit(1);
+
+if (!order) return Astro.redirect("/app/ordenes");
+
+const items = await db
+  .select()
+  .from(schema.supplierOrderItems)
+  .where(eq(schema.supplierOrderItems.orderId, order.id));
+
+const fmt = (n: number) => "$" + Number(n).toLocaleString("es-MX", { minimumFractionDigits: 2 });
+const fmtDate = (d: Date | null) => d ? new Date(d).toLocaleString("es-MX", { dateStyle: "medium", timeStyle: "short" }) : "—";
+
+const statusLabel: Record<string, { label: string; cls: string }> = {
+  draft:    { label: "Borrador",         cls: "bg-neutral-100 text-neutral-600" },
+  sent:     { label: "Enviada",          cls: "bg-blue-50 text-brand-blue" },
+  partial:  { label: "Recibida parcial", cls: "bg-warning-50 text-warning-500" },
+  received: { label: "Recibida",         cls: "bg-success-50 text-success-500" },
+  cancelled:{ label: "Cancelada",        cls: "bg-danger-50 text-danger-500" },
+};
+const st = statusLabel[order.status] ?? statusLabel.draft;
+---
+
+<AppLayout title={order.orderNumber} activeRoute="ordenes">
+  <div class="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-8">
+    <header class="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <a href="/app/ordenes" class="inline-flex items-center gap-2 text-sm font-semibold text-brand-blue hover:underline">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Volver a órdenes
+        </a>
+        <h1 class="mt-3 font-mono text-2xl font-bold text-neutral-900 md:text-3xl">{order.orderNumber}</h1>
+        <p class="mt-1 text-sm text-neutral-500">{order.supplier} · {order.warehouse} · {fmtDate(order.createdAt)}</p>
+      </div>
+      <span class={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${st.cls}`}>{st.label}</span>
+    </header>
+
+    <section class="mb-6 grid gap-4 md:grid-cols-3">
+      <div class="rounded-2xl border border-neutral-200 bg-white p-4 shadow-card">
+        <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Fecha esperada</div>
+        <div class="mt-1 text-sm font-semibold text-neutral-900">{fmtDate(order.expectedAt)}</div>
+      </div>
+      <div class="rounded-2xl border border-neutral-200 bg-white p-4 shadow-card">
+        <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Enviada</div>
+        <div class="mt-1 text-sm font-semibold text-neutral-900">{fmtDate(order.sentAt)}</div>
+      </div>
+      <div class="rounded-2xl border border-neutral-200 bg-white p-4 shadow-card">
+        <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Recibida</div>
+        <div class="mt-1 text-sm font-semibold text-neutral-900">{fmtDate(order.receivedAt)}</div>
+      </div>
+    </section>
+
+    {order.notes && (
+      <div class="mb-6 rounded-2xl border border-neutral-200 bg-white p-4 text-sm text-neutral-700">
+        <span class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Notas</span>
+        <p class="mt-1">{order.notes}</p>
+      </div>
+    )}
+
+    <div class="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-card">
+      <table class="w-full text-sm">
+        <thead class="bg-neutral-50">
+          <tr class="text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
+            <th class="px-4 py-3 md:px-5">Producto</th>
+            <th class="px-4 py-3 text-right md:px-5">Pedido</th>
+            <th class="px-4 py-3 text-right md:px-5">Recibido</th>
+            <th class="px-4 py-3 text-right md:px-5">Costo unit.</th>
+            <th class="hidden px-4 py-3 text-right md:table-cell md:px-5">IVA %</th>
+            <th class="px-4 py-3 text-right md:px-5">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-neutral-100">
+          {items.map((it) => (
+            <tr>
+              <td class="px-4 py-3 md:px-5">
+                <div class="font-medium text-neutral-900">{it.productName}</div>
+                {it.lot && <div class="font-mono text-[10px] text-neutral-500">Lote {it.lot}</div>}
+              </td>
+              <td class="px-4 py-3 text-right font-mono tabular text-neutral-700 md:px-5">{it.quantityOrdered}</td>
+              <td class={`px-4 py-3 text-right font-mono tabular md:px-5 ${it.quantityReceived === it.quantityOrdered ? "text-success-500" : "text-neutral-500"}`}>{it.quantityReceived}</td>
+              <td class="px-4 py-3 text-right font-mono tabular text-neutral-700 md:px-5">{fmt(it.unitCost)}</td>
+              <td class="hidden px-4 py-3 text-right text-neutral-500 md:table-cell md:px-5">{it.ivaPct}%</td>
+              <td class="px-4 py-3 text-right font-mono font-semibold tabular text-neutral-900 md:px-5">
+                {fmt(it.quantityOrdered * it.unitCost * (1 + it.ivaPct / 100))}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot class="bg-neutral-50">
+          <tr class="text-sm">
+            <td colspan="5" class="px-4 py-2 text-right text-neutral-500 md:px-5">Subtotal</td>
+            <td class="px-4 py-2 text-right font-mono tabular text-neutral-700 md:px-5">{fmt(order.subtotal)}</td>
+          </tr>
+          <tr class="text-sm">
+            <td colspan="5" class="px-4 py-2 text-right text-neutral-500 md:px-5">IVA</td>
+            <td class="px-4 py-2 text-right font-mono tabular text-neutral-700 md:px-5">{fmt(order.ivaTotal)}</td>
+          </tr>
+          <tr>
+            <td colspan="5" class="px-4 py-3 text-right font-heading font-bold text-neutral-900 md:px-5">Total</td>
+            <td class="px-4 py-3 text-right font-mono text-xl font-bold tabular text-brand-blue md:px-5">{fmt(order.total)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="mt-6 flex flex-wrap justify-end gap-3">
+      {order.status === "draft" && (
+        <button id="btn-send" type="button" class="rounded-lg bg-brand-blue px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-800">
+          Marcar como enviada al proveedor
+        </button>
+      )}
+      {(order.status === "draft" || order.status === "sent" || order.status === "partial") && (
+        <button id="btn-receive" type="button" class="rounded-lg bg-success-500 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-success-500/90">
+          Recibir orden completa
+        </button>
+      )}
+    </div>
+  </div>
+</AppLayout>
+
+<script is:inline define:vars={{ orderId: order.id, email: order.supplierEmail }}>
+  const send = document.getElementById("btn-send");
+  send?.addEventListener("click", async () => {
+    if (!confirm("Marcar la orden como enviada al proveedor?")) return;
+    send.disabled = true; send.textContent = "Enviando...";
+    const res = await fetch(`/api/supplier-orders/${orderId}/send`, { method: "POST" });
+    const data = await res.json();
+    if (data.ok) {
+      if (email && confirm(`Quieres abrir tu cliente de correo para enviar la orden a ${email}?`)) {
+        window.location.href = `mailto:${email}?subject=Orden de compra ${orderId}&body=Adjuntamos la orden de compra. Ver detalle en %0A%0Ahttps://farmalat.sopadeletras.art/app/ordenes/${orderId}`;
+      } else { window.location.reload(); }
+    } else { alert(data.error); send.disabled = false; send.textContent = "Marcar como enviada al proveedor"; }
+  });
+  const rec = document.getElementById("btn-receive");
+  rec?.addEventListener("click", async () => {
+    if (!confirm("Confirmar recepción completa. Esto sumará al inventario y NO se puede deshacer.")) return;
+    rec.disabled = true; rec.textContent = "Procesando...";
+    const res = await fetch(`/api/supplier-orders/${orderId}/receive`, { method: "POST" });
+    const data = await res.json();
+    if (data.ok) { window.location.reload(); }
+    else { alert(data.error); rec.disabled = false; rec.textContent = "Recibir orden completa"; }
+  });
+</script>
+
