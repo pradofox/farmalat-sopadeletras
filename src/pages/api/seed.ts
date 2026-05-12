@@ -7,10 +7,11 @@ import type { APIRoute } from "astro";
 import { getDb } from "../../lib/db";
 import { seed } from "../../lib/seed";
 
-export const POST: APIRoute = async () => {
+export const POST: APIRoute = async ({ url }) => {
   const db = getDb();
+  const reset = url.searchParams.get("reset") === "1";
   try {
-    const result = await seed(db);
+    const result = await seed(db, { reset });
     return new Response(JSON.stringify(result), {
       status: 200,
       headers: { "Content-Type": "application/json" },
